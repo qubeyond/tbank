@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import health_router, event_router, queue_router, ticket_router
+from app.routers import *
 
 
 def create_app() -> FastAPI:
@@ -31,6 +31,9 @@ def create_app() -> FastAPI:
     app.include_router(queue_router, prefix="/queue")
     app.include_router(ticket_router, prefix="/ticket")
     
+    app.include_router(auth_router, prefix="/auth")
+    app.include_router(management_router, prefix="/management")
+
     return app
 
 
