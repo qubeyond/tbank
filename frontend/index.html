@@ -1,109 +1,13 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TBank Queue System</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <h1>TBank Queue System</h1>
-        
-        <!-- Health Check -->
-        <div class="section">
-            <h2>Health Check</h2>
-            <div class="form-group">
-                <button id="healthStatusBtn">Health Status</button>
-                <button id="healthDbBtn">Database Health</button>
-            </div>
-            <div id="healthResult" class="result"></div>
-        </div>
-
-        <!-- Events -->
-        <div class="section">
-            <h2>Events</h2>
-            <div class="form-group">
-                <input type="text" id="eventName" placeholder="Event Name">
-                <input type="text" id="eventQr" placeholder="QR Code">
-                <button id="createEventBtn">Create Event</button>
-            </div>
-            <div class="form-group">
-                <input type="number" id="eventId" placeholder="Event ID">
-                <button id="getEventBtn">Get Event</button>
-                <button id="updateEventBtn">Update Event</button>
-                <button id="deleteEventBtn">Delete Event</button>
-            </div>
-            <div class="form-group">
-                <input type="number" id="eventsSkip" placeholder="Skip" value="0">
-                <input type="number" id="eventsLimit" placeholder="Limit" value="100">
-                <button id="getAllEventsBtn">Get All Events</button>
-            </div>
-            <div id="eventsResult" class="result"></div>
-        </div>
-
-        <!-- Queues -->
-        <div class="section">
-            <h2>Queues</h2>
-            <div class="form-group">
-                <input type="number" id="eventIdForQueues" placeholder="Event ID">
-                <button id="getEventQueuesBtn">Get Event Queues</button>
-            </div>
-            <div class="form-group">
-                <input type="number" id="queueId" placeholder="Queue ID">
-                <button id="getQueueBtn">Get Queue</button>
-                <button id="getQueueStatusBtn">Get Queue Status</button>
-                <button id="callNextBtn">Call Next</button>
-            </div>
-            <div class="form-group">
-                <h4>Create Queue</h4>
-                <input type="number" id="queueEventId" placeholder="Event ID">
-                <input type="text" id="queueLetter" placeholder="Queue Letter (A, B, C...)" maxlength="1">
-                <button id="createQueueBtn">Create Queue</button>
-            </div>
-
-            <div id="queuesResult" class="result"></div>
-        </div>
-
-        <!-- Tickets -->
-        <div class="section">
-            <h2>Tickets</h2>
-            <div class="form-group">
-                <input type="number" id="ticketQueueId" placeholder="Queue ID">
-                <input type="text" id="clientIdentity" placeholder="Client Identity">
-                <button id="createTicketBtn">Create Ticket</button>
-            </div>
-            <div class="form-group">
-                <input type="number" id="ticketId" placeholder="Ticket ID">
-                <button id="getTicketBtn">Get Ticket</button>
-                <button id="updateTicketBtn">Update Ticket</button>
-                <button id="completeTicketBtn">Complete Ticket</button>
-            </div>
-            <div class="form-group">
-                <input type="number" id="queueIdForTickets" placeholder="Queue ID">
-                <button id="getQueueTicketsBtn">Get Queue Tickets</button>
-            </div>
-            <div id="ticketsResult" class="result"></div>
-        </div>
-
-        <!-- Raw API Tester -->
-        <div class="section">
-            <h2>Raw API Tester</h2>
-            <div class="form-group">
-                <input type="text" id="apiUrl" placeholder="/event/" style="width: 300px;">
-                <select id="apiMethod">
-                    <option value="GET">GET</option>
-                    <option value="POST">POST</option>
-                    <option value="PUT">PUT</option>
-                    <option value="DELETE">DELETE</option>
-                </select>
-                <textarea id="apiBody" placeholder='{"name": "test", "qr_code": "test123"}' style="width: 300px; height: 60px;"></textarea>
-                <button id="apiTestBtn">Test API</button>
-            </div>
-            <div id="apiResult" class="result"></div>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>my-react-app</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

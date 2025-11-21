@@ -1,0 +1,161 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  min-height: 100vh;
+  width: 100vw;
+  position: relative;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+}
+
+.app.dark {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+.app.light {
+  background-color: #f5f5f5;
+  color: black;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 100;
+}
+
+.app.dark .theme-toggle {
+  background-color: #333;
+  color: white;
+}
+
+.app.light .theme-toggle {
+  background-color: #ddd;
+  color: black;
+}
+
+.background-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.app.dark .background-line {
+  stroke: #ffd700;
+}
+
+.app.light .background-line {
+  stroke: #ffd700;
+}
+
+.content {
+  position: relative;
+  z-index: 10;
+  padding: 20px; /* Уменьшил для мобильных */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  justify-content: center;
+}
+
+.main-display-label {
+  font-size: clamp(1.5rem, 5vw, 3rem); /* Адаптивный шрифт */
+  font-weight: bold;
+  font-family: monospace;
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  word-wrap: break-word;
+}
+
+.app.dark .main-display-label {
+  color: #ffd700; 
+}
+
+.app.light .main-display-label {
+  color: #000700; 
+}
+
+.main-display {
+  font-size: clamp(2rem, 8vw, 4rem); /* Адаптивный шрифт */
+  font-weight: bold;
+  font-family: monospace;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.app.dark .main-display {
+  color: #ffd700;
+}
+
+.app.light .main-display {
+  color: #000700;
+}
+
+.ticket-box {
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 3px solid;
+  word-wrap: break-word; /* Перенос длинных слов */
+  overflow-wrap: break-word;
+}
+
+.app.dark .ticket-box {
+  background: rgba(26, 26, 26, 1);
+  border-color: #ffd700;
+  color: white;
+}
+
+.app.light .ticket-box {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #333;
+  color: black;
+}
+
+.ticket-label {
+  font-size: clamp(1.2rem, 4vw, 1.5rem);
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.ticket-number {
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: bold;
+  font-family: monospace;
+  margin: 1rem 0;
+}
+
+.ticket-type {
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  font-family: monospace;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+  max-width: 100%;
+  word-wrap: break-word;
+  text-align: center;
+  padding: 0 10px;
+}
