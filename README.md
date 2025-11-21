@@ -1,3 +1,3 @@
 - `docker compose up --build -d` - запуск
-- `docker compose exec api python3 app/utils/test_all.py` - тесты
+- `docker compose exec api uv run app/utils/test_all.py` - тесты
 - `http://localhost:8000/docs` - свагер
