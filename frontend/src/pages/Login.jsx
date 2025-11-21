@@ -16,44 +16,44 @@ function Login() {
     setIsLoading(true)
 
     try {
-      // 1. Проверяем что введен числовой ID
       const eventIdNum = parseInt(eventId)
       if (isNaN(eventIdNum)) {
         setError('Код мероприятия должен быть числом')
         return
       }
 
-      // 2. Пытаемся получить мероприятие по ID
+      // Проверяем существование мероприятия
       const event = await apiCall(`/event/${eventIdNum}`)
       
-      // 3. Получаем очереди для этого мероприятия
-      const queues = await apiCall(`/queue/event/${eventIdNum}`)
-      
-      if (!queues || queues.length === 0) {
-        setError('Для этого мероприятия нет активных очередей')
-        return
+      // Создаем талон с правильными параметрами
+      const ticketData = {
+        event_id: eventIdNum,
+        user_identity: `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        notes: "Создан через веб-интерфейс"
       }
 
-      // 4. Берем первую доступную очередь
-      const queue = queues[0]
-
-      // 5. Создаем талон
+      console.log('Creating ticket with:', ticketData)
+      
       const ticket = await apiCall('/ticket/', {
         method: 'POST',
-        body: JSON.stringify({
-          queue_id: queue.id,
-          client_identity: `user_${Date.now()}`
-        })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ticketData)
       })
 
-      // 6. Сохраняем данные и переходим
       localStorage.setItem('currentTicketId', ticket.id)
       localStorage.setItem('currentEventId', eventIdNum)
       navigate('/user')
 
     } catch (err) {
+      console.error('❌ Full error:', err)
+      
       if (err.message.includes('404')) {
         setError('Мероприятие с таким кодом не найдено')
+      } else if (err.message.includes('422')) {
+        const errorMsg = err.message.replace('HTTP 422: ', '')
+        setError(`Ошибка данных: ${errorMsg}`)
       } else {
         setError('Ошибка при создании талона: ' + err.message)
       }
@@ -107,6 +107,7 @@ function Login() {
               placeholder="Введите код мероприятия"
               required
               disabled={isLoading}
+              min="1"
             />
           </div>
 

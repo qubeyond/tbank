@@ -1,8 +1,8 @@
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'http://localhost:8000';  // Всегда localhost для браузера
 
 export async function apiCall(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`
-    console.log('🔄 API Call:', url)
+    console.log('🔄 API Call:', url, options)
     
     try {
         const response = await fetch(url, {
@@ -17,10 +17,8 @@ export async function apiCall(endpoint, options = {}) {
         
         let data
         try {
-            // Пытаемся прочитать как JSON
             data = await response.json()
         } catch (jsonError) {
-            // Если не JSON, читаем как текст
             const text = await response.text()
             data = { message: text, _raw: text }
         }
@@ -28,7 +26,22 @@ export async function apiCall(endpoint, options = {}) {
         console.log('📄 Response data:', data)
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${data.message || 'Not Found'}`)
+            // ФИКС: Правильно извлекаем сообщение об ошибке
+            let errorMessage = 'Unknown error'
+            
+            if (data.detail && Array.isArray(data.detail)) {
+                // Формат FastAPI: берем первое сообщение из массива detail
+                errorMessage = data.detail[0]?.msg || JSON.stringify(data.detail)
+            } else if (data.detail) {
+                // Если detail не массив
+                errorMessage = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)
+            } else if (data.message) {
+                errorMessage = data.message
+            } else if (typeof data === 'string') {
+                errorMessage = data
+            }
+            
+            throw new Error(`HTTP ${response.status}: ${errorMessage}`)
         }
         
         return data
