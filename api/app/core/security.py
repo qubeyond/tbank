@@ -28,6 +28,7 @@ CORS_SETTINGS = {
         "http://frontend:80",
         "http://localhost:3000",
         "http://localhost",
+        "http://localhost:5173",
     ],
     "allow_credentials": True,
     "allow_methods": ["*"],
