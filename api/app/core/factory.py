@@ -11,6 +11,9 @@ from app.routers import (
     private_auth_router,
     private_management_router,
     public_ticket_router,
+    event_analytics_router,
+    queue_analytics_router,
+    ticket_analytics_router
 )
 
 
@@ -32,6 +35,10 @@ def create_app() -> FastAPI:
     app.include_router(private_management_router, prefix="/management")
     
     app.include_router(public_ticket_router, prefix="/ticket")
+
+    app.include_router(event_analytics_router, prefix="/analytics/event")
+    app.include_router(queue_analytics_router, prefix="/analytics/queue")
+    app.include_router(ticket_analytics_router, prefix="/analytics/ticket")
     
     return app
 
