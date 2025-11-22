@@ -1,4 +1,4 @@
-from .private.auth import router as private_auth_router
+from .public.auth import router as private_auth_router
 from .private.management import router as private_management_router
 from .private.health import router as private_health_router
 from .private.event import router as private_event_router

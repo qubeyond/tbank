@@ -1,9 +1,14 @@
+import uuid
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Set
+import hashlib
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic_settings import BaseSettings
+
+
+token_blacklist: Set[str] = set()
 
 
 class SecuritySettings(BaseSettings):
@@ -21,6 +26,8 @@ class SecuritySettings(BaseSettings):
 CORS_SETTINGS = {
     "allow_origins": [
         "http://frontend:80",
+        "http://localhost:3000",
+        "http://localhost",
     ],
     "allow_credentials": True,
     "allow_methods": ["*"],
@@ -51,13 +58,19 @@ class SecurityService:
     
     def create_access_token(self, data: dict) -> str:
         """Создает JWT access токен."""
-
+        
         if not self.settings.JWT_SECRET_KEY:
             raise ValueError("JWT_SECRET_KEY не установлен")
         
         to_encode = data.copy()
+        
         expire = datetime.utcnow() + timedelta(minutes=self.settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
-        to_encode.update({"exp": expire})
+        to_encode.update({
+            "exp": expire,
+            "iat": datetime.utcnow(),  
+            "jti": str(uuid.uuid4()),  
+            "type": "access_token"
+        })
         
         return jwt.encode(to_encode, self.settings.JWT_SECRET_KEY, algorithm=self.settings.JWT_ALGORITHM)
     
@@ -65,6 +78,9 @@ class SecurityService:
         """Проверяет и декодирует JWT токен."""
 
         try:
+            if self.is_token_blacklisted(token):
+                return None
+                
             payload = jwt.decode(
                 token, 
                 self.settings.JWT_SECRET_KEY, 
@@ -73,6 +89,23 @@ class SecurityService:
             return payload
         except JWTError:
             return None
+    
+    def add_to_blacklist(self, token: str):
+        """Добавляет токен в blacklist."""
+        
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        token_blacklist.add(token_hash)
+    
+    def is_token_blacklisted(self, token: str) -> bool:
+        """Проверяет, находится ли токен в blacklist."""
+
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        return token_hash in token_blacklist
+    
+    def clear_blacklist(self):
+        """Очищает blacklist (для тестирования)."""
+
+        token_blacklist.clear()
 
 
 security_service = SecurityService()
