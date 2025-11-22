@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
-import { apiCall } from '../api'
+import { apiCall } from '../api.js'
 
 function Login() {
   const [eventCode, setEventCode] = useState('')

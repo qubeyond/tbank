@@ -1,6 +1,4 @@
-const API_BASE = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:8000'  // разработка
-  : 'http://api:8000';   // продакшн в Docker сети
+const API_BASE = 'http://localhost:8000';
 
 export async function apiCall(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`
