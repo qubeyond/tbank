@@ -17,7 +17,17 @@ async def get_current_admin(
     token: str = Depends(security),
     db: AsyncSession = Depends(get_db)
 ) -> Account:
-    """Получает текущего администратора по JWT токену."""
+    """
+    Args:
+        token: JWT токен из заголовка Authorization
+        db: Сессия базы данных
+        
+    Returns:
+        Account: Объект администратора
+        
+    Raises:
+        HTTPException: 401 если токен невалидный или администратор не найден
+    """
 
     payload = security_service.verify_access_token(token.credentials)
     if not payload:
@@ -43,9 +53,20 @@ async def get_current_admin(
     return admin
 
 
-@router.get("/test", response_model=AdminTestResponse)
+@router.get(
+    "/test", 
+    response_model=AdminTestResponse,
+    summary="Тест аутентификации администратора",
+    description="Тестовый эндпоинт для проверки корректности JWT аутентификации и получения информации о текущем администраторе."
+)
 async def admin_test_route(current_admin: Account = Depends(get_current_admin)):
-    """Тестовый рут для проверки аутентификации администратора."""
+    """
+    Args:
+        current_admin: Текущий аутентифицированный администратор
+        
+    Returns:
+        AdminTestResponse: Результат проверки аутентификации с информацией об администраторе
+    """
 
     return AdminTestResponse(
         message="Admin authentication successful",
@@ -59,9 +80,20 @@ async def admin_test_route(current_admin: Account = Depends(get_current_admin)):
     )
 
 
-@router.get("/me", response_model=AdminResponse)
+@router.get(
+    "/me", 
+    response_model=AdminResponse,
+    summary="Получить информацию о текущем администраторе",
+    description="Возвращает полную информацию о текущем аутентифицированном администраторе."
+)
 async def get_current_admin_info(current_admin: Account = Depends(get_current_admin)):
-    """Получить информацию о текущем администраторе."""
+    """
+    Args:
+        current_admin: Текущий аутентифицированный администратор
+        
+    Returns:
+        AdminResponse: Информация об администраторе
+    """
     
     return AdminResponse(
         id=current_admin.id,

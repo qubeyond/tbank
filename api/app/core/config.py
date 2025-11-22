@@ -2,18 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """Основные настройки приложения.
-    
-    Атрибуты:
-        POSTGRES_DB: Название базы данных
-        POSTGRES_USER: Пользователь базы данных
-        POSTGRES_PASSWORD: Пароль базы данных
-        POSTGRES_HOST: Хост базы данных
-        POSTGRES_PORT: Порт базы данных
-        API_HOST: Хост API сервера
-        API_PORT: Порт API сервера
-        DEBUG: Режим отладки
-    """
+    """Основные настройки приложения."""
     
     # Database
     POSTGRES_DB: str
@@ -30,11 +19,13 @@ class Settings(BaseSettings):
     @property
     def ASYNC_DB_URL(self) -> str:
         """URL для асинхронного подключения к базе данных."""
+
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
     
     @property
     def SYNC_DB_URL(self) -> str:
         """URL для синхронного подключения к базе данных."""
+
         return f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     class Config:

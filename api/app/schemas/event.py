@@ -1,11 +1,10 @@
-"""Схемы для мероприятий."""
 from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict
 
 
 class EventBase(BaseModel):
     """Базовая схема мероприятия."""
+    
     name: str
     is_active: bool = True
 
@@ -19,6 +18,7 @@ class EventCreate(EventBase):
 
 class EventUpdate(BaseModel):
     """Схема для обновления мероприятия."""
+    
     name: str | None = None
     is_active: bool | None = None
 
@@ -27,6 +27,7 @@ class EventUpdate(BaseModel):
 
 class EventResponse(EventBase):
     """Схема ответа с мероприятием."""
+    
     id: int
     code: str
     is_deleted: bool
@@ -38,4 +39,5 @@ class EventResponse(EventBase):
 
 class EventDeleteRequest(BaseModel):
     """Схема для удаления мероприятия."""
+    
     hard_delete: bool = False

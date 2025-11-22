@@ -1,35 +1,37 @@
-"""Схемы для очередей."""
 from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class QueueBase(BaseModel):
     """Базовая схема очереди."""
-    is_active: bool = Field(True, description="Активна ли очередь")
+    
+    is_active: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class QueueCreate(QueueBase):
     """Схема для создания очереди."""
-    event_id: int = Field(..., description="ID мероприятия")
+    
+    event_id: int
 
 
 class QueueUpdate(BaseModel):
     """Схема для обновления очереди."""
-    name: str | None = Field(None, max_length=10, description="Название очереди")
-    is_active: bool | None = Field(None, description="Активна ли очередь")
-    current_position: int | None = Field(None, ge=0, description="Текущая позиция")
+    
+    name: str | None = Field(None, max_length=10)
+    is_active: bool | None = None
+    current_position: int | None = Field(None, ge=0)
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class QueueResponse(QueueBase):
     """Схема ответа с информацией об очереди."""
+    
     id: int
     event_id: int
-    name: str = Field(..., max_length=10, description="Название очереди (A, B, C...)")
+    name: str = Field(..., max_length=10)
     is_deleted: bool
     current_position: int
     created_at: datetime
@@ -40,6 +42,7 @@ class QueueResponse(QueueBase):
 
 class QueueStatus(BaseModel):
     """Схема со статусом очереди."""
+    
     queue_id: int
     name: str
     current_position: int
@@ -54,5 +57,6 @@ class QueueStatus(BaseModel):
 
 class QueueDeleteRequest(BaseModel):
     """Схема для удаления очереди."""
-    hard_delete: bool = Field(False, description="Полное удаление")
-    move_tickets_to: int | None = Field(None, description="ID очереди для перемещения талонов")
+    
+    hard_delete: bool = False
+    move_tickets_to: int | None = None

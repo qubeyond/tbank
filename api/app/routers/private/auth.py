@@ -12,12 +12,27 @@ from app.schemas import AdminLoginResponse
 router = APIRouter(tags=["private-auth"])
 
 
-@router.post("/login", response_model=AdminLoginResponse)
+@router.post(
+    "/login", 
+    response_model=AdminLoginResponse,
+    summary="Аутентификация администратора",
+    description="Аутентификация администратора с использованием Basic Auth и выдача JWT токена для доступа к защищенным эндпоинтам."
+)
 async def admin_login( 
     credentials: HTTPBasicCredentials = Depends(HTTPBasic()),
     db: AsyncSession = Depends(get_db)
 ):
-    """Аутентификация администратора и выдача JWT токена."""
+    """
+    Args:
+        credentials: Учетные данные Basic Auth (username и password)
+        db: Сессия базы данных
+        
+    Returns:
+        AdminLoginResponse: JWT токен и информация об администраторе
+        
+    Raises:
+        HTTPException: 401 если учетные данные неверны или администратор неактивен
+    """
 
     admin = await db.scalar(
         select(Account).where(Account.username == credentials.username)

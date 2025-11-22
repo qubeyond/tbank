@@ -18,6 +18,16 @@ class SecuritySettings(BaseSettings):
         case_sensitive = False
 
 
+CORS_SETTINGS = {
+    "allow_origins": [
+        "http://frontend:80",
+    ],
+    "allow_credentials": True,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"],
+}
+
+
 class SecurityService:
     """Сервис для работы с безопасностью и аутентификацией."""
     

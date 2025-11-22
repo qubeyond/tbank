@@ -2,7 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import *
+from app.core.security import CORS_SETTINGS
+from app.routers import (
+    private_health_router,
+    private_event_router, 
+    private_queue_router,
+    private_ticket_router,
+    private_auth_router,
+    private_management_router,
+    public_ticket_router,
+)
 
 
 def create_app() -> FastAPI:
@@ -13,27 +22,17 @@ def create_app() -> FastAPI:
         debug=settings.DEBUG,
     )
     
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",  
-            "http://127.0.0.1:3000",  
-            "http://frontend:80",
-            "http://localhost:5137",
-        ],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    app.add_middleware(CORSMiddleware, **CORS_SETTINGS)
     
-    app.include_router(health_router, prefix="/health")
-    app.include_router(event_router, prefix="/event")
-    app.include_router(queue_router, prefix="/queue")
-    app.include_router(ticket_router, prefix="/ticket")
+    app.include_router(private_health_router, prefix="/health")
+    app.include_router(private_event_router, prefix="/event")
+    app.include_router(private_queue_router, prefix="/queue")
+    app.include_router(private_ticket_router, prefix="/ticket")
+    app.include_router(private_auth_router, prefix="/auth")
+    app.include_router(private_management_router, prefix="/management")
     
-    app.include_router(auth_router, prefix="/auth")
-    app.include_router(management_router, prefix="/management")
-
+    app.include_router(public_ticket_router, prefix="/ticket")
+    
     return app
 
 

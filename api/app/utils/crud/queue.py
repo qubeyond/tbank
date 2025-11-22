@@ -163,16 +163,46 @@ async def delete_queue(
     if not queue:
         return False
     
+    # Если указана очередь для перемещения талонов
     if move_tickets_to:
         target_queue = await get_queue(db, move_tickets_to)
         if not target_queue:
             raise ValueError("Целевая очередь для перемещения талонов не найдена")
         
-        await db.execute(
-            Ticket.__table__.update()
-            .where(Ticket.queue_id == queue_id)
-            .values(queue_id=move_tickets_to)
+        if target_queue.id == queue_id:
+            raise ValueError("Нельзя переместить талоны в ту же очередь")
+        
+        # Получаем все талоны из удаляемой очереди (сортировка по времени создания)
+        tickets_to_move = await db.execute(
+            select(Ticket).where(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False
+            ).order_by(Ticket.created_at.asc())  # Сначала старые талоны
         )
+        tickets = tickets_to_move.scalars().all()
+        
+        # Получаем текущие талоны в целевой очереди (сортировка по времени создания)
+        existing_tickets = await db.execute(
+            select(Ticket).where(
+                Ticket.queue_id == move_tickets_to,
+                Ticket.is_deleted == False
+            ).order_by(Ticket.created_at.asc())
+        )
+        existing_tickets_list = existing_tickets.scalars().all()
+        
+        # Объединяем и пересчитываем позиции с учетом времени создания
+        all_tickets = list(existing_tickets_list) + list(tickets)
+        
+        # Сортируем все талоны по времени создания (старые сначала)
+        all_tickets_sorted = sorted(all_tickets, key=lambda x: x.created_at)
+        
+        # Пересчитываем позиции для всех талонов
+        for position, ticket in enumerate(all_tickets_sorted, 1):
+            ticket.position = position
+            # Если талон перемещается, сбрасываем статус на "waiting"
+            if ticket.queue_id == queue_id:
+                ticket.queue_id = move_tickets_to
+                ticket.status = "waiting"
     
     if hard_delete:
         await db.delete(queue)
@@ -182,6 +212,59 @@ async def delete_queue(
     
     await db.commit()
     return True
+
+
+async def get_queue_status(db: AsyncSession, queue_id: int) -> dict:
+    """Получить статус очереди.
+    
+    Args:
+        db: Асинхронная сессия базы данных
+        queue_id: ID очереди
+        
+    Returns:
+        Словарь со статусом очереди
+    """
+    queue = await get_queue(db, queue_id)
+    if not queue:
+        return {}
+    
+    # Получаем статистику по талонам в очереди
+    result = await db.execute(
+        select(
+            func.count(Ticket.id).filter(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False,
+                Ticket.status == "waiting"
+            ).label("waiting"),
+            func.count(Ticket.id).filter(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False,
+                Ticket.status == "called"
+            ).label("processing"),
+            func.count(Ticket.id).filter(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False,
+                Ticket.status == "completed"
+            ).label("completed"),
+            func.count(Ticket.id).filter(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False
+            ).label("total")
+        )
+    )
+    
+    counts = result.first()
+    
+    return {
+        "queue_id": queue.id,
+        "name": queue.name,
+        "current_position": queue.current_position,
+        "waiting_count": counts.waiting or 0,
+        "processing_count": counts.processing or 0,
+        "completed_count": counts.completed or 0,
+        "is_active": queue.is_active,
+        "total_tickets": counts.total or 0
+    }
 
 
 async def call_next(db: AsyncSession, queue_id: int) -> Queue | None:
@@ -204,6 +287,31 @@ async def call_next(db: AsyncSession, queue_id: int) -> Queue | None:
     return queue
 
 
+async def get_queues_by_event(
+    db: AsyncSession, 
+    event_id: int,
+    include_deleted: bool = False
+) -> list[Queue]:
+    """Получить все очереди мероприятия.
+    
+    Args:
+        db: Асинхронная сессия базы данных
+        event_id: ID мероприятия
+        include_deleted: Включать удаленные очереди
+        
+    Returns:
+        Список очередей мероприятия
+    """
+    query = select(Queue).where(Queue.event_id == event_id)
+    if not include_deleted:
+        query = query.where(Queue.is_deleted == False)
+    
+    query = query.order_by(Queue.name)
+    
+    result = await db.execute(query)
+    return list(result.scalars().all())
+
+
 async def get_queue_status(db: AsyncSession, queue_id: int) -> dict:
     """Получить статус очереди.
     
@@ -218,13 +326,29 @@ async def get_queue_status(db: AsyncSession, queue_id: int) -> dict:
     if not queue:
         return {}
     
+    # Получаем статистику по талонам в очереди
     result = await db.execute(
         select(
-            func.count(Ticket.id).filter(Ticket.status == "waiting").label("waiting"),
-            func.count(Ticket.id).filter(Ticket.status == "processing").label("processing"),
-            func.count(Ticket.id).filter(Ticket.status == "completed").label("completed"),
-            func.count(Ticket.id).label("total")
-        ).where(Ticket.queue_id == queue_id)
+            func.count(Ticket.id).filter(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False,
+                Ticket.status == "waiting"
+            ).label("waiting"),
+            func.count(Ticket.id).filter(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False,
+                Ticket.status == "called"
+            ).label("processing"),
+            func.count(Ticket.id).filter(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False,
+                Ticket.status == "completed"
+            ).label("completed"),
+            func.count(Ticket.id).filter(
+                Ticket.queue_id == queue_id,
+                Ticket.is_deleted == False
+            ).label("total")
+        )
     )
     
     counts = result.first()

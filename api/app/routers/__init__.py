@@ -1,17 +1,19 @@
-"""Роутеры API."""
-from .health import router as health_router
-from .event import router as event_router
-from .queue import router as queue_router
-from .ticket import router as ticket_router
+from .private.auth import router as private_auth_router
+from .private.management import router as private_management_router
+from .private.health import router as private_health_router
+from .private.event import router as private_event_router
+from .private.queue import router as private_queue_router
+from .private.ticket import router as private_ticket_router
 
-from .private import auth_router, management_router
+from .public.ticket import router as public_ticket_router
 
 
 __all__ = [
-    "health_router", 
-    "event_router", 
-    "queue_router", 
-    "ticket_router",
-    "auth_router",
-    "management_router",
+    "private_auth_router", 
+    "private_management_router",
+    "private_health_router", 
+    "private_event_router", 
+    "private_queue_router", 
+    "private_ticket_router",
+    "public_ticket_router",
 ]

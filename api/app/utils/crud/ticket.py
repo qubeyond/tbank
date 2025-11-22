@@ -11,20 +11,21 @@ from app.utils.crud.queue import get_queues_by_event
 
 async def create_ticket(db: AsyncSession, ticket_data: TicketCreate) -> Ticket:
     """Создать новый талон с автоматическим распределением в наименее загруженную очередь."""
+    
     event_result = await db.execute(  
         select(Event).where(
-            Event.id == ticket_data.event_id,
+            Event.code == ticket_data.event_code,
             Event.is_deleted == False,
             Event.is_active == True
         )
     )
     event = event_result.scalar_one_or_none()
     if not event:
-        raise ValueError("Event not found, deleted or inactive")
+        raise ValueError("Мероприятие не найдено, удалено или неактивно")
     
-    queues = await get_queues_by_event(db, ticket_data.event_id) 
+    queues = await get_queues_by_event(db, event.id)  
     if not queues:
-        raise ValueError("No active queues found for this event")
+        raise ValueError("Нет активных очередей для этого мероприятия")
     
     least_loaded_queue = await find_least_loaded_queue(db, queues)
     if not least_loaded_queue:
@@ -269,7 +270,7 @@ async def cancel_ticket(db: AsyncSession, ticket_id: int, notes: str | None = No
 
 
 async def move_ticket(db: AsyncSession, ticket_id: int, target_queue_id: int) -> Ticket | None:
-    """Переместить талон в другую очередь.
+    """Переместить талон в другую очередь с учетом времени создания.
     
     Args:
         db: Асинхронная сессия базы данных
@@ -283,6 +284,7 @@ async def move_ticket(db: AsyncSession, ticket_id: int, target_queue_id: int) ->
     if not ticket:
         return None
     
+    # Проверяем, что целевая очередь существует и не удалена
     queue_result = await db.execute(
         select(Queue).where(
             Queue.id == target_queue_id,
@@ -291,22 +293,28 @@ async def move_ticket(db: AsyncSession, ticket_id: int, target_queue_id: int) ->
     )
     target_queue = queue_result.scalar_one_or_none()
     if not target_queue:
-        raise ValueError("Target queue not found or deleted")
+        raise ValueError("Целевая очередь не найдена или удалена")
     
-    result = await db.execute(
-        select(Ticket.position)
-        .where(
+    # Получаем все талоны в целевой очереди (включая перемещаемый)
+    all_tickets_result = await db.execute(
+        select(Ticket).where(
             Ticket.queue_id == target_queue_id,
             Ticket.is_deleted == False
-        )
-        .order_by(Ticket.position.desc())
+        ).order_by(Ticket.created_at.asc())
     )
-    last_position = result.scalar()
-    new_position = (last_position or 0) + 1
+    existing_tickets = all_tickets_result.scalars().all()
     
+    # Добавляем перемещаемый талон в список
     ticket.queue_id = target_queue_id
-    ticket.position = new_position
-    ticket.status = "waiting"  
+    ticket.status = "waiting"
+    all_tickets = list(existing_tickets) + [ticket]
+    
+    # Сортируем все талоны по времени создания
+    all_tickets_sorted = sorted(all_tickets, key=lambda x: x.created_at)
+    
+    # Пересчитываем позиции
+    for position, t in enumerate(all_tickets_sorted, 1):
+        t.position = position
     
     await db.commit()
     await db.refresh(ticket)
@@ -351,20 +359,22 @@ async def get_ticket_position(db: AsyncSession, ticket_id: int) -> dict | None:
     if not ticket:
         return None
     
+    # Считаем количество талонов перед текущим в той же очереди
     result = await db.execute(
-        select(Ticket.id)
+        select(func.count(Ticket.id))
         .where(
             Ticket.queue_id == ticket.queue_id,
             Ticket.position < ticket.position,
-            Ticket.is_deleted == False
+            Ticket.is_deleted == False,
+            Ticket.status == "waiting"  # Считаем только ожидающие
         )
     )
-    ahead_count = len(result.scalars().all())
+    ahead_count = result.scalar() or 0
     
     return {
         "ticket_id": ticket.id,
         "queue_id": ticket.queue_id,
         "position": ticket.position,
         "ahead_count": ahead_count,
-        "estimated_wait_time": ahead_count * 5  
+        "estimated_wait_time": ahead_count * 5  # 5 минут на каждого
     }
