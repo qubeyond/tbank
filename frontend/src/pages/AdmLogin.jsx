@@ -104,7 +104,7 @@ function AdmLogin() {
         </button>
         
         <div className="login-container">
-          <h1>Панель администратора</h1>
+          <h2>Панель администратора</h2>
           
           <div className="admin-info">
             <div className="info-item">

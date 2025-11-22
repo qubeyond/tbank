@@ -1,3 +1,4 @@
+/* pages/Admin.css */
 .admin-page {
   min-height: 100vh;
   width: 100vw;
@@ -15,7 +16,7 @@
 
 .admin-page.light {
   background-color: #f5f5f5;
-  color: black;
+  color: #333;
 }
 
 .background-line1 {
@@ -90,10 +91,12 @@
 
 .admin-page.dark .admin-container {
   background: rgba(0, 0, 0, 0.8);
+  color: white;
 }
 
 .admin-page.light .admin-container {
   background: rgba(255, 255, 255, 0.95);
+  color: black;
 }
 
 .admin-header {
@@ -108,6 +111,11 @@
 .admin-header h1 {
   margin: 0;
   font-size: 1.8rem;
+  color: white;
+}
+
+.admin-page.light .admin-header h1 {
+  color: black;
 }
 
 .header-actions {
@@ -118,16 +126,18 @@
 
 .refresh-btn {
   padding: 8px 16px;
-  background: #17a2b8;
+  background: #333;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
+  transition: all 0.3s;
 }
 
 .refresh-btn:hover:not(:disabled) {
-  background: #138496;
+  background: #555;
+  transform: translateY(-1px);
 }
 
 .refresh-btn:disabled {
@@ -137,16 +147,18 @@
 
 .logout-btn {
   padding: 10px 20px;
-  background: #dc3545;
+  background: #333;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
+  transition: all 0.3s;
 }
 
 .logout-btn:hover {
   background: #c82333;
+  transform: translateY(-1px);
 }
 
 .admin-content {
@@ -174,35 +186,57 @@
 
 .section-header h2 {
   margin: 0;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.admin-page.light .section-header h2 {
+  color: black;
 }
 
 .create-btn {
   padding: 10px 20px;
-  background: #28a745;
+  background: #333;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
   white-space: nowrap;
+  transition: all 0.3s;
 }
 
 .create-btn:hover {
-  background: #218838;
+  background: #555;
+  transform: translateY(-1px);
 }
 
-/* Форма создания */
 .create-form-container {
-  background: rgba(40, 167, 69, 0.1);
-  border: 1px solid #28a745;
+  background: rgba(51, 51, 51, 0.8);
+  border: 1px solid #ddd;
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
+.admin-page.dark .create-form-container {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-page.light .create-form-container {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+}
+
 .create-form-container h3 {
   margin-top: 0;
   margin-bottom: 1rem;
+  color: white;
+}
+
+.admin-page.light .create-form-container h3 {
+  color: black;
 }
 
 .form-group {
@@ -213,15 +247,22 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: bold;
+  color: white;
+}
+
+.admin-page.light .form-group label {
+  color: black;
 }
 
 .form-group input[type="text"] {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 2px solid #ddd;
   border-radius: 6px;
   font-size: 1rem;
   box-sizing: border-box;
+  background: white;
+  color: black;
 }
 
 .admin-page.dark .form-group input[type="text"] {
@@ -230,11 +271,21 @@
   border-color: #555;
 }
 
+.form-group input[type="text"]:focus {
+  border-color: #333;
+  outline: none;
+}
+
 .checkbox-group label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  color: white;
+}
+
+.admin-page.light .checkbox-group label {
+  color: black;
 }
 
 .checkbox-group input[type="checkbox"] {
@@ -245,20 +296,23 @@
 .form-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .submit-create-btn {
   padding: 10px 20px;
-  background: #007bff;
+  background: #333;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 1rem;
+  transition: all 0.3s;
 }
 
 .submit-create-btn:hover:not(:disabled) {
-  background: #0056b3;
+  background: #555;
+  transform: translateY(-1px);
 }
 
 .submit-create-btn:disabled {
@@ -275,58 +329,170 @@
 }
 
 .event-card {
-  background: rgba(102, 126, 234, 0.1);
-  border: 1px solid #667eea;
+  background: rgba(51, 51, 51, 0.8);
+  border: 1px solid #ddd;
   border-radius: 8px;
   padding: 1.2rem;
   cursor: pointer;
   transition: all 0.3s;
 }
 
+.admin-page.dark .event-card {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-page.light .event-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+}
+
 .event-card:hover {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(51, 51, 51, 0.9);
   transform: translateY(-2px);
 }
 
+.admin-page.light .event-card:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
 .event-card.selected {
-  background: rgba(102, 126, 234, 0.3);
-  border-color: #4a5fc8;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  background: rgba(51, 51, 51, 0.9);
+  border-color: #333;
+  box-shadow: 0 4px 12px rgba(51, 51, 51, 0.3);
+}
+
+.admin-page.light .event-card.selected {
+  background: rgba(51, 51, 51, 0.1);
+  border-color: #333;
+}
+
+.event-card.deleted {
+  opacity: 0.6;
+  background: rgba(255, 0, 0, 0.1);
+  border-color: #ff4444;
 }
 
 .event-card h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.2rem;
-  color: #667eea;
+  color: white;
+}
+
+.admin-page.light .event-card h3 {
+  color: black;
 }
 
 .event-card p {
   margin: 0.2rem 0;
   font-size: 0.9rem;
+  color: white;
 }
 
-.no-events {
-  text-align: center;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  border: 2px dashed #667eea;
+.admin-page.light .event-card p {
+  color: #333;
 }
 
 .event-details {
-  background: rgba(102, 126, 234, 0.1);
-  border: 1px solid #667eea;
+  background: rgba(51, 51, 51, 0.8);
+  border: 1px solid #ddd;
   border-radius: 8px;
   padding: 1.5rem;
-  height: fit-content;
-  position: sticky;
-  top: 2rem;
+}
+
+.admin-page.dark .event-details {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-page.light .event-details {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
 }
 
 .event-details h2 {
   margin-top: 0;
+  margin-bottom: 1rem;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.admin-page.light .event-details h2 {
+  color: black;
+}
+
+.event-actions {
+  display: flex;
+  gap: 1rem;
   margin-bottom: 1.5rem;
-  color: #667eea;
+}
+
+.edit-btn, .delete-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.edit-btn {
+  background: #333;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #555;
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: #333;
+  color: white;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-form {
+  background: rgba(51, 51, 51, 0.8);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.admin-page.dark .edit-form {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-page.light .edit-form {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+}
+
+.cancel-btn {
+  padding: 10px 20px;
+  background: #666;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-btn:hover {
+  background: #888;
 }
 
 .event-info {
@@ -340,19 +506,41 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+  border-bottom: 1px solid rgba(221, 221, 221, 0.3);
 }
 
 .info-row:last-child {
   border-bottom: none;
 }
 
+.info-row strong {
+  color: white;
+}
+
+.admin-page.light .info-row strong {
+  color: black;
+}
+
+.info-row span {
+  color: white;
+}
+
+.admin-page.light .info-row span {
+  color: #333;
+}
+
 .event-code {
   font-family: monospace;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(51, 51, 51, 0.5);
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: bold;
+  color: white;
+}
+
+.admin-page.light .event-code {
+  background: rgba(51, 51, 51, 0.1);
+  color: black;
 }
 
 .status.active {
@@ -365,17 +553,88 @@
   font-weight: bold;
 }
 
-.no-selection {
-  text-align: center;
-  padding: 3rem 2rem;
-  background: rgba(255, 255, 255, 0.1);
+.queues-box {
+  background: rgba(51, 51, 51, 0.8);
+  border: 1px solid #ddd;
   border-radius: 8px;
-  border: 2px dashed #667eea;
-  color: #666;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  text-align: center;
 }
 
+.admin-page.dark .queues-box {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-page.light .queues-box {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+}
+
+.queues-box h3 {
+  margin: 0 0 1rem 0;
+  color: white;
+  font-size: 1.3rem;
+}
+
+.admin-page.light .queues-box h3 {
+  color: black;
+}
+
+.manage-queues-btn {
+  padding: 12px 24px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto 1rem auto;
+}
+
+.manage-queues-btn:hover {
+  background: #555;
+  transform: translateY(-2px);
+}
+
+.queues-description {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  line-height: 1.4;
+  color: white;
+}
+
+.admin-page.light .queues-description {
+  color: #333;
+}
+
+.no-events, .no-selection {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(51, 51, 51, 0.8);
+  border-radius: 8px;
+  border: 2px dashed #ddd;
+  color: white;
+}
+
+.admin-page.dark .no-events, 
 .admin-page.dark .no-selection {
-  color: #aaa;
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+  color: white;
+}
+
+.admin-page.light .no-events,
+.admin-page.light .no-selection {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+  color: #333;
 }
 
 .error-message {
@@ -393,7 +652,11 @@
   text-align: center;
   padding: 2rem;
   font-size: 1.1rem;
-  color: #667eea;
+  color: white;
+}
+
+.admin-page.light .loading {
+  color: #333;
 }
 
 @media (max-width: 768px) {
@@ -421,7 +684,7 @@
     align-items: flex-start;
   }
   
-  .event-details {
-    position: static;
+  .event-actions {
+    flex-direction: column;
   }
 }

@@ -139,14 +139,14 @@
 }
 
 .input-group input:focus {
-  border-color: #667eea;
+  border-color: #333;
   outline: none;
 }
 
 .submit-btn {
   width: 100%;
   padding: 12px; /* Уменьшил padding */
-  background: #667eea;
+  background: #333;
   color: white;
   border: none;
   border-radius: 8px;
@@ -157,7 +157,7 @@
 }
 
 .submit-btn:hover {
-  background: #5a6fd8;
+  background: #333;
 }
 
 .submit-btn:disabled {
@@ -184,7 +184,7 @@
   padding: 1.2rem; /* Уменьшил padding */
   background: rgba(102, 126, 234, 0.1);
   border-radius: 10px;
-  border: 1px solid #667eea;
+  border: 1px solid #333;
   font-size: 0.9rem; /* Уменьшил размер */
 }
 
@@ -221,7 +221,7 @@
 }
 
 .action-btn.primary {
-  background: #667eea;
+  background: #333;
   color: white;
 }
 
@@ -230,7 +230,7 @@
 }
 
 .action-btn.logout-btn {
-  background: #dc3545;
+  background: #333;
   color: white;
 }
 
@@ -252,4 +252,85 @@
   h1 {
     font-size: 1.5rem; /* Уменьшаем заголовок на мобильных */
   }
+}
+
+/* Добавьте в Admin.css */
+
+.event-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.event-details-header h2 {
+  margin: 0;
+  font-size: 1.5rem; /* Меньший размер шрифта */
+}
+
+.event-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-btn, .delete-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.edit-btn {
+  background: #ffc107;
+  color: black;
+}
+
+.edit-btn:hover {
+  background: #e0a800;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
+.queues-action {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid #667eea;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.manage-queues-btn {
+  padding: 12px 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: background 0.3s;
+}
+
+.manage-queues-btn:hover {
+  background: #5a6fd8;
+}
+
+.queues-action-description {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Обновите также заголовок админки */
+.admin-header h1 {
+  margin: 0;
+  font-size: 1.8rem; /* Можно сделать меньше если нужно */
 }

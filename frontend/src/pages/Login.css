@@ -129,14 +129,14 @@
 }
 
 .input-group input:focus {
-  border-color: #667eea;
+  border-color: #333;
   outline: none;
 }
 
 .submit-btn {
   width: 100%;
   padding: 15px;
-  background: #667eea;
+  background: #333;
   color: white;
   border: none;
   border-radius: 8px;

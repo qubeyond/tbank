@@ -1,0 +1,556 @@
+/* pages/AdminQueue.css */
+.admin-queue-page {
+  min-height: 100vh;
+  width: 100vw;
+  position: relative;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.admin-queue-page.dark {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+.admin-queue-page.light {
+  background-color: #f5f5f5;
+  color: black;
+}
+
+.background-line1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 1.0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.admin-queue-page.dark .background-line1 {
+  stroke: #d2b206;
+}
+
+.admin-queue-page.light .background-line1 {
+  stroke: #d2b206;
+}
+
+.background-line2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 1.0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.admin-queue-page.dark .background-line2 {
+  stroke: #ffd700;
+}
+
+.admin-queue-page.light .background-line2 {
+  stroke: #ffd700;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 100;
+  font-size: 1.2rem;
+}
+
+.admin-queue-page.dark .theme-toggle {
+  background-color: #333;
+  color: white;
+}
+
+.admin-queue-page.light .theme-toggle {
+  background-color: #ddd;
+  color: black;
+}
+
+.admin-queue-container {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 2rem;
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+
+.admin-queue-page.dark .admin-queue-container {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+}
+
+.admin-queue-page.light .admin-queue-container {
+  background: rgba(255, 255, 255, 0.95);
+  color: black;
+}
+
+.admin-queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.back-btn {
+  padding: 8px 16px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.back-btn:hover {
+  background: #c82333;
+}
+
+.admin-queue-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: white;
+}
+
+.admin-queue-page.light .admin-queue-header h1 {
+  color: black;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.refresh-btn {
+  padding: 8px 16px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #5A6FD8;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Карточка информации о мероприятии */
+.event-info-card {
+  background: rgba(01, 51, 51, 0.8);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.admin-queue-page.dark .event-info-card {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-queue-page.light .event-info-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+}
+
+.event-info-card h2 {
+  margin: 0 0 1rem 0;
+  color: white;
+}
+
+.admin-queue-page.light .event-info-card h2 {
+  color: black;
+}
+
+.event-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.event-details p {
+  margin: 0;
+  color: white;
+}
+
+.admin-queue-page.light .event-details p {
+  color: #333;
+}
+
+/* Основной контент */
+.queues-content {
+  margin-top: 2rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header h2 {
+  margin: 0;
+  color: white;
+}
+
+.admin-queue-page.light .section-header h2 {
+  color: black;
+}
+
+.create-btn {
+  padding: 10px 20px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  white-space: nowrap;
+  transition: all 0.3s;
+}
+
+.create-btn:hover {
+  background: #5A6FD8;
+}
+
+/* Сетка очередей */
+.queues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.queue-card {
+  background: rgba(51, 51, 51, 0.8);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s;
+}
+
+.admin-queue-page.dark .queue-card {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-queue-page.light .queue-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+}
+
+.queue-card:hover {
+  background: rgba(51, 51, 51, 0.9);
+  transform: translateY(-2px);
+}
+
+.admin-queue-page.light .queue-card:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.queue-header h3 {
+  margin: 0;
+  color: white;
+}
+
+.admin-queue-page.light .queue-header h3 {
+  color: black;
+}
+
+.queue-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-btn, .delete-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.edit-btn {
+  background: #333;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #5A6FD8;
+}
+
+.delete-btn {
+  background: #333;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
+.queue-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.queue-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.admin-queue-page.light .queue-info p {
+  color: #333;
+}
+
+.status.active {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.status.inactive {
+  color: #f44336;
+  font-weight: bold;
+}
+
+/* Формы */
+.create-form-container {
+  background: rgba(51, 51, 51, 0.8);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-queue-page.dark .create-form-container {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-queue-page.light .create-form-container {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+}
+
+.create-form-container h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.admin-queue-page.light .create-form-container h3 {
+  color: black;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.admin-queue-page.light .form-group label {
+  color: black;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"] {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background: white;
+  color: black;
+}
+
+.admin-queue-page.dark .form-group input[type="text"],
+.admin-queue-page.dark .form-group input[type="number"] {
+  background: #333;
+  color: white;
+  border-color: #555;
+}
+
+.form-group input:focus {
+  border-color: #333;
+  outline: none;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: white;
+}
+
+.admin-queue-page.light .checkbox-group label {
+  color: black;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.submit-create-btn {
+  padding: 10px 20px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.submit-create-btn:hover:not(:disabled) {
+  background: #5A6FD8 ;
+}
+
+.submit-create-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  padding: 10px 20px;
+  background: #666;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-btn:hover {
+  background: #5A6FD8;
+}
+
+/* Сообщения об ошибках и загрузке */
+.error-message {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  text-align: center;
+  border: 1px solid #ff4444;
+  word-wrap: break-word;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+  color: white;
+}
+
+.admin-queue-page.light .loading {
+  color: #333;
+}
+
+.no-queues {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(51, 51, 51, 0.8);
+  border-radius: 8px;
+  border: 2px dashed #ddd;
+  color: white;
+}
+
+.admin-queue-page.dark .no-queues {
+  background: rgba(51, 51, 51, 0.8);
+  border-color: #555;
+}
+
+.admin-queue-page.light .no-queues {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ddd;
+  color: #333;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .admin-queue-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .queues-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .queue-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .queue-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
