@@ -26,7 +26,7 @@ function User() {
   return (
     <div className={`app ${isDark ? 'dark' : 'light'}`}>
       <button className="theme-toggle" onClick={toggleTheme}>
-        {isDark ? 'Светлая тема' : 'Тёмная тема'}
+        {isDark ? ' ☼ ' : ' ☾ '}
       </button>
       
       <svg className="background-line" width="100%" height="100%">

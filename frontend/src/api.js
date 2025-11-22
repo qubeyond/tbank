@@ -1,15 +1,28 @@
+// api.js - ОБНОВЛЕННАЯ ВЕРСИЯ
 const API_BASE = 'http://localhost:8000';
 
 export async function apiCall(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`
-    console.log('🔄 API Call:', url, options)
+    
+    // Получаем токен из localStorage
+    const token = localStorage.getItem('adminToken')
+    
+    // Создаем заголовки с учетом токена
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+    
+    // Добавляем токен авторизации, если он есть
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    console.log('🔄 API Call:', url, { ...options, headers })
     
     try {
         const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
+            headers,
             ...options
         })
         
@@ -26,14 +39,11 @@ export async function apiCall(endpoint, options = {}) {
         console.log('📄 Response data:', data)
         
         if (!response.ok) {
-            // ФИКС: Правильно извлекаем сообщение об ошибке
             let errorMessage = 'Unknown error'
             
             if (data.detail && Array.isArray(data.detail)) {
-                // Формат FastAPI: берем первое сообщение из массива detail
                 errorMessage = data.detail[0]?.msg || JSON.stringify(data.detail)
             } else if (data.detail) {
-                // Если detail не массив
                 errorMessage = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)
             } else if (data.message) {
                 errorMessage = data.message

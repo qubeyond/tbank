@@ -74,7 +74,7 @@ function Login() {
       </svg>
       
       <button className="theme-toggle" onClick={toggleTheme}>
-        {isDark ? 'Светлая тема' : 'Тёмная тема'}
+        {isDark ? ' ☼ ' : ' ☾ '}
       </button>
       
       <div className="login-container">
