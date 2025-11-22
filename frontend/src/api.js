@@ -1,4 +1,6 @@
-const API_BASE = 'http://localhost:8000';  // Всегда localhost для браузера
+const API_BASE = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:8000'  // разработка
+  : 'http://api:8000';   // продакшн в Docker сети
 
 export async function apiCall(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
-import { apiCall } from '../api.js' 
+import { apiCall } from '../api'
 
 function Login() {
-  const [eventId, setEventId] = useState('')
+  const [eventCode, setEventCode] = useState('')
+  const [userIdentity, setUserIdentity] = useState('')
+  const [notes, setNotes] = useState('')
   const [isDark, setIsDark] = useState(true)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -16,44 +18,28 @@ function Login() {
     setIsLoading(true)
 
     try {
-      const eventIdNum = parseInt(eventId)
-      if (isNaN(eventIdNum)) {
-        setError('Код мероприятия должен быть числом')
-        return
-      }
-
-      // Проверяем существование мероприятия
-      const event = await apiCall(`/event/${eventIdNum}`)
-      
-      // Создаем талон с правильными параметрами
-      const ticketData = {
-        event_id: eventIdNum,
-        user_identity: `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-        notes: "Создан через веб-интерфейс"
-      }
-
-      console.log('Creating ticket with:', ticketData)
-      
+      // Создаем талон напрямую по новому API
       const ticket = await apiCall('/ticket/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(ticketData)
+        body: JSON.stringify({
+          event_code: eventCode.trim(),       // ← изменилось на event_code
+          user_identity: userIdentity || `user_${Date.now()}`, // ← изменилось на user_identity
+          notes: notes || ''                  // ← новое поле
+        })
       })
 
+      // Сохраняем данные и переходим
       localStorage.setItem('currentTicketId', ticket.id)
-      localStorage.setItem('currentEventId', eventIdNum)
+      localStorage.setItem('currentEventId', ticket.event_id) // ← берем из ответа
+      localStorage.setItem('currentQueueId', ticket.queue_id) // ← берем из ответа
+      
       navigate('/user')
 
     } catch (err) {
-      console.error('❌ Full error:', err)
-      
-      if (err.message.includes('404')) {
+      if (err.message.includes('404') || err.message.includes('не найдено')) {
         setError('Мероприятие с таким кодом не найдено')
-      } else if (err.message.includes('422')) {
-        const errorMsg = err.message.replace('HTTP 422: ', '')
-        setError(`Ошибка данных: ${errorMsg}`)
+      } else if (err.message.includes('400')) {
+        setError('Неверные данные для создания талона')
       } else {
         setError('Ошибка при создании талона: ' + err.message)
       }
@@ -96,18 +82,41 @@ function Login() {
         
         <form onSubmit={handleSubmit} className="login-form">
           <div className="input-group">
-            <label>Код мероприятия (ID):</label>
+            <label>Код мероприятия:</label>
             <input 
-              type="number" 
-              value={eventId}
+              type="text"
+              value={eventCode}
               onChange={(e) => {
-                setEventId(e.target.value)
+                setEventCode(e.target.value.toUpperCase())
                 setError('')
               }}
               placeholder="Введите код мероприятия"
               required
               disabled={isLoading}
-              min="1"
+              pattern="[A-Z0-9]{1,20}"
+              title="Только буквы и цифры"
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Ваше имя (опционально):</label>
+            <input 
+              type="text"
+              value={userIdentity}
+              onChange={(e) => setUserIdentity(e.target.value)}
+              placeholder="Введите ваше имя"
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Примечания (опционально):</label>
+            <textarea 
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Дополнительная информация"
+              disabled={isLoading}
+              rows="3"
             />
           </div>
 
