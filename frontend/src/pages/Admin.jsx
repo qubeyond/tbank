@@ -270,10 +270,6 @@ function Admin() {
                     </span>
                   </div>
                   <div className="info-row">
-                    <strong>Старый код:</strong> 
-                    <span>{selectedEvent.is_old_code ? 'Да' : 'Нет'}</span>
-                  </div>
-                  <div className="info-row">
                     <strong>Создано:</strong> 
                     <span>{formatDate(selectedEvent.created_at)}</span>
                   </div>
