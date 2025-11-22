@@ -1,4 +1,3 @@
-"""CRUD операции для талонов."""
 from datetime import datetime
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,12 +5,42 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models.ticket import Ticket
 from app.db.models.queue import Queue
 from app.db.models.event import Event
-from app.schemas.ticket import TicketCreate, TicketUpdate
+from app.schemas.ticket import TicketCreate, TicketUpdate, TicketUpdatePublic
 from app.utils.crud.queue import get_queues_by_event
 
+
 async def create_ticket(db: AsyncSession, ticket_data: TicketCreate) -> Ticket:
-    """Создать новый талон с автоматическим распределением в наименее загруженную очередь."""
+    """
+    Создать новый талон с автоматическим распределением в наименее загруженную очередь.
     
+    Args:
+        db: Асинхронная сессия базы данных
+        ticket_data: Данные для создания талона
+        
+    Returns:
+        Ticket: Созданный талон
+        
+    Raises:
+        ValueError: Мероприятие не найдено или нет активных очередей
+        ValueError: У пользователя уже есть активный талон на это мероприятие
+    """
+    # Проверяем, что у пользователя нет активного талона на это мероприятие
+    existing_ticket = await db.execute(
+        select(Ticket)
+        .join(Queue)
+        .join(Event)
+        .where(
+            Event.code == ticket_data.event_code,
+            Ticket.session_id == ticket_data.session_id,
+            Ticket.is_deleted == False,
+            Ticket.status.in_(["waiting", "called"])
+        )
+    )
+    
+    if existing_ticket.scalar_one_or_none():
+        raise ValueError("У вас уже есть активный талон на это мероприятие")
+    
+    # Находим мероприятие
     event_result = await db.execute(  
         select(Event).where(
             Event.code == ticket_data.event_code,
@@ -23,14 +52,17 @@ async def create_ticket(db: AsyncSession, ticket_data: TicketCreate) -> Ticket:
     if not event:
         raise ValueError("Мероприятие не найдено, удалено или неактивно")
     
+    # Находим очереди мероприятия
     queues = await get_queues_by_event(db, event.id)  
     if not queues:
         raise ValueError("Нет активных очередей для этого мероприятия")
     
+    # Находим наименее загруженную очередь
     least_loaded_queue = await find_least_loaded_queue(db, queues)
     if not least_loaded_queue:
-        raise ValueError("No suitable queue found")
+        raise ValueError("Не найдена подходящая очередь")
     
+    # Определяем следующую позицию
     result = await db.execute(
         select(Ticket.position)
         .where(
@@ -42,9 +74,10 @@ async def create_ticket(db: AsyncSession, ticket_data: TicketCreate) -> Ticket:
     last_position = result.scalar()
     next_position = (last_position or 0) + 1
     
+    # Создаем талон
     ticket = Ticket(
         queue_id=least_loaded_queue.id,
-        user_identity=ticket_data.user_identity,  
+        session_id=ticket_data.session_id,
         position=next_position,
         notes=ticket_data.notes
     )
@@ -55,14 +88,15 @@ async def create_ticket(db: AsyncSession, ticket_data: TicketCreate) -> Ticket:
 
 
 async def find_least_loaded_queue(db: AsyncSession, queues: list[Queue]) -> Queue | None:
-    """Найти наименее загруженную очередь.
+    """
+    Найти наименее загруженную очередь.
     
     Args:
         db: Асинхронная сессия базы данных
         queues: Список очередей для выбора
         
     Returns:
-        Наименее загруженная очередь
+        Queue | None: Наименее загруженная очередь или None
     """
     if not queues:
         return None
@@ -72,12 +106,13 @@ async def find_least_loaded_queue(db: AsyncSession, queues: list[Queue]) -> Queu
         if not queue.is_active or queue.is_deleted:
             continue
             
+        # Считаем количество ожидающих талонов в очереди
         result = await db.execute(
             select(func.count(Ticket.id))
             .where(
                 Ticket.queue_id == queue.id,
                 Ticket.is_deleted == False,
-                Ticket.status == "waiting"  
+                Ticket.status == "waiting"
             )
         )
         waiting_count = result.scalar() or 0
@@ -91,11 +126,13 @@ async def find_least_loaded_queue(db: AsyncSession, queues: list[Queue]) -> Queu
     if not queue_loads:
         return None
     
+    # Сортируем по нагрузке
     queue_loads.sort(key=lambda x: x["load"])
     
     min_load = queue_loads[0]["load"]
     min_load_queues = [q for q in queue_loads if q["load"] == min_load]
     
+    # Если несколько очередей с одинаковой нагрузкой, сортируем по текущей позиции
     if len(min_load_queues) > 1:
         min_load_queues.sort(key=lambda x: x["current_position"])
     
@@ -103,7 +140,8 @@ async def find_least_loaded_queue(db: AsyncSession, queues: list[Queue]) -> Queu
 
 
 async def get_ticket(db: AsyncSession, ticket_id: int, include_deleted: bool = False) -> Ticket | None:
-    """Получить талон по ID.
+    """
+    Получить талон по ID.
     
     Args:
         db: Асинхронная сессия базы данных
@@ -111,7 +149,7 @@ async def get_ticket(db: AsyncSession, ticket_id: int, include_deleted: bool = F
         include_deleted: Включать удаленные талоны
         
     Returns:
-        Талон или None если не найден
+        Ticket | None: Талон или None если не найден
     """
     query = select(Ticket).where(Ticket.id == ticket_id)
     if not include_deleted:
@@ -126,7 +164,8 @@ async def get_tickets_by_queue(
     queue_id: int, 
     include_deleted: bool = False
 ) -> list[Ticket]:
-    """Получить все талоны в очереди.
+    """
+    Получить все талоны в очереди.
     
     Args:
         db: Асинхронная сессия базы данных
@@ -134,7 +173,7 @@ async def get_tickets_by_queue(
         include_deleted: Включать удаленные талоны
         
     Returns:
-        Список талонов в очереди
+        list[Ticket]: Список талонов в очереди
     """
     query = select(Ticket).where(Ticket.queue_id == queue_id)
     if not include_deleted:
@@ -146,22 +185,23 @@ async def get_tickets_by_queue(
     return list(result.scalars().all())
 
 
-async def get_tickets_by_user(
+async def get_tickets_by_session(
     db: AsyncSession, 
-    user_identity: str,
+    session_id: str,
     include_deleted: bool = False
 ) -> list[Ticket]:
-    """Получить все талоны пользователя.
+    """
+    Получить все талоны пользователя по session_id.
     
     Args:
         db: Асинхронная сессия базы данных
-        user_identity: Идентификатор пользователя
+        session_id: Идентификатор сессии пользователя
         include_deleted: Включать удаленные талоны
         
     Returns:
-        Список талонов пользователя
+        list[Ticket]: Список талонов пользователя
     """
-    query = select(Ticket).where(Ticket.user_identity == user_identity)
+    query = select(Ticket).where(Ticket.session_id == session_id)
     if not include_deleted:
         query = query.where(Ticket.is_deleted == False)
     
@@ -172,7 +212,8 @@ async def get_tickets_by_user(
 
 
 async def update_ticket(db: AsyncSession, ticket_id: int, ticket_data: TicketUpdate) -> Ticket | None:
-    """Обновить талон.
+    """
+    Обновить талон (админ).
     
     Args:
         db: Асинхронная сессия базы данных
@@ -180,7 +221,7 @@ async def update_ticket(db: AsyncSession, ticket_id: int, ticket_data: TicketUpd
         ticket_data: Данные для обновления
         
     Returns:
-        Обновленный талон или None если не найден
+        Ticket | None: Обновленный талон или None если не найден
     """
     ticket = await get_ticket(db, ticket_id)
     if not ticket:
@@ -195,8 +236,39 @@ async def update_ticket(db: AsyncSession, ticket_id: int, ticket_data: TicketUpd
     return ticket
 
 
+async def update_ticket_public(db: AsyncSession, ticket_id: int, ticket_data: TicketUpdatePublic, session_id: str) -> Ticket | None:
+    """
+    Обновить талон (публичный) с проверкой session_id.
+    
+    Args:
+        db: Асинхронная сессия базы данных
+        ticket_id: ID талона
+        ticket_data: Данные для обновления
+        session_id: Идентификатор сессии для проверки
+        
+    Returns:
+        Ticket | None: Обновленный талон или None если не найден/доступ запрещен
+    """
+    ticket = await get_ticket(db, ticket_id)
+    if not ticket:
+        return None
+    
+    # Проверяем, что пользователь является владельцем талона
+    if ticket.session_id != session_id:
+        return None
+    
+    # Обновляем только заметку
+    if ticket_data.notes is not None:
+        ticket.notes = ticket_data.notes
+    
+    await db.commit()
+    await db.refresh(ticket)
+    return ticket
+
+
 async def call_ticket(db: AsyncSession, ticket_id: int, notes: str | None = None) -> Ticket | None:
-    """Вызвать талон.
+    """
+    Вызвать талон.
     
     Args:
         db: Асинхронная сессия базы данных
@@ -204,7 +276,7 @@ async def call_ticket(db: AsyncSession, ticket_id: int, notes: str | None = None
         notes: Дополнительные заметки
         
     Returns:
-        Обновленный талон или None если не найден
+        Ticket | None: Обновленный талон или None если не найден
     """
     ticket = await get_ticket(db, ticket_id)
     if not ticket:
@@ -221,7 +293,8 @@ async def call_ticket(db: AsyncSession, ticket_id: int, notes: str | None = None
 
 
 async def complete_ticket(db: AsyncSession, ticket_id: int, notes: str | None = None) -> Ticket | None:
-    """Завершить талон.
+    """
+    Завершить талон.
     
     Args:
         db: Асинхронная сессия базы данных
@@ -229,7 +302,7 @@ async def complete_ticket(db: AsyncSession, ticket_id: int, notes: str | None = 
         notes: Дополнительные заметки
         
     Returns:
-        Обновленный талон или None если не найден
+        Ticket | None: Обновленный талон или None если не найден
     """
     ticket = await get_ticket(db, ticket_id)
     if not ticket:
@@ -245,19 +318,25 @@ async def complete_ticket(db: AsyncSession, ticket_id: int, notes: str | None = 
     return ticket
 
 
-async def cancel_ticket(db: AsyncSession, ticket_id: int, notes: str | None = None) -> Ticket | None:
-    """Отменить талон.
+async def cancel_ticket(db: AsyncSession, ticket_id: int, session_id: str | None = None, notes: str | None = None) -> Ticket | None:
+    """
+    Отменить талон.
     
     Args:
         db: Асинхронная сессия базы данных
         ticket_id: ID талона
+        session_id: Идентификатор сессии для проверки (опционально)
         notes: Дополнительные заметки
         
     Returns:
-        Обновленный талон или None если не найден
+        Ticket | None: Обновленный талон или None если не найден/доступ запрещен
     """
     ticket = await get_ticket(db, ticket_id)
     if not ticket:
+        return None
+    
+    # Если передан session_id, проверяем права доступа
+    if session_id and ticket.session_id != session_id:
         return None
     
     ticket.status = "cancelled"
@@ -270,7 +349,8 @@ async def cancel_ticket(db: AsyncSession, ticket_id: int, notes: str | None = No
 
 
 async def move_ticket(db: AsyncSession, ticket_id: int, target_queue_id: int) -> Ticket | None:
-    """Переместить талон в другую очередь с учетом времени создания.
+    """
+    Переместить талон в другую очередь с учетом времени создания.
     
     Args:
         db: Асинхронная сессия базы данных
@@ -278,7 +358,10 @@ async def move_ticket(db: AsyncSession, ticket_id: int, target_queue_id: int) ->
         target_queue_id: ID целевой очереди
         
     Returns:
-        Обновленный талон или None если не найден
+        Ticket | None: Обновленный талон или None если не найден
+        
+    Raises:
+        ValueError: Целевая очередь не найдена или удалена
     """
     ticket = await get_ticket(db, ticket_id)
     if not ticket:
@@ -295,7 +378,7 @@ async def move_ticket(db: AsyncSession, ticket_id: int, target_queue_id: int) ->
     if not target_queue:
         raise ValueError("Целевая очередь не найдена или удалена")
     
-    # Получаем все талоны в целевой очереди (включая перемещаемый)
+    # Получаем все талоны в целевой очереди
     all_tickets_result = await db.execute(
         select(Ticket).where(
             Ticket.queue_id == target_queue_id,
@@ -322,7 +405,8 @@ async def move_ticket(db: AsyncSession, ticket_id: int, target_queue_id: int) ->
 
 
 async def delete_ticket(db: AsyncSession, ticket_id: int, hard_delete: bool = False) -> bool:
-    """Удалить талон.
+    """
+    Удалить талон.
     
     Args:
         db: Асинхронная сессия базы данных
@@ -330,7 +414,7 @@ async def delete_ticket(db: AsyncSession, ticket_id: int, hard_delete: bool = Fa
         hard_delete: Полное удаление из базы
         
     Returns:
-        True если удалено, False если не найдено
+        bool: True если удалено, False если не найдено
     """
     ticket = await get_ticket(db, ticket_id, include_deleted=True)
     if not ticket:
@@ -346,14 +430,15 @@ async def delete_ticket(db: AsyncSession, ticket_id: int, hard_delete: bool = Fa
 
 
 async def get_ticket_position(db: AsyncSession, ticket_id: int) -> dict | None:
-    """Получить позицию талона в очереди.
+    """
+    Получить позицию талона в очереди.
     
     Args:
         db: Асинхронная сессия базы данных
         ticket_id: ID талона
         
     Returns:
-        Информация о позиции или None если не найден
+        dict | None: Информация о позиции или None если не найден
     """
     ticket = await get_ticket(db, ticket_id)
     if not ticket:
@@ -366,7 +451,7 @@ async def get_ticket_position(db: AsyncSession, ticket_id: int) -> dict | None:
             Ticket.queue_id == ticket.queue_id,
             Ticket.position < ticket.position,
             Ticket.is_deleted == False,
-            Ticket.status == "waiting"  # Считаем только ожидающие
+            Ticket.status == "waiting"
         )
     )
     ahead_count = result.scalar() or 0
@@ -378,3 +463,22 @@ async def get_ticket_position(db: AsyncSession, ticket_id: int) -> dict | None:
         "ahead_count": ahead_count,
         "estimated_wait_time": ahead_count * 5  # 5 минут на каждого
     }
+
+
+async def verify_ticket_ownership(db: AsyncSession, ticket_id: int, session_id: str) -> bool:
+    """
+    Проверить, что пользователь является владельцем талона.
+    
+    Args:
+        db: Асинхронная сессия базы данных
+        ticket_id: ID талона
+        session_id: Идентификатор сессии пользователя
+        
+    Returns:
+        bool: True если пользователь является владельцем
+    """
+    ticket = await get_ticket(db, ticket_id)
+    if not ticket:
+        return False
+    
+    return ticket.session_id == session_id

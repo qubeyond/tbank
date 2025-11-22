@@ -21,6 +21,7 @@ class Account(Base):
     """
 
     __tablename__ = "accounts"
+    __table_args__ = {'extend_existing': True}
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)

@@ -1,13 +1,14 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class TicketBase(BaseModel):
     """Базовая схема талона."""
     
-    user_identity: str = Field(..., max_length=100)
-    notes: str | None = None
+    session_id: str = Field(..., max_length=100, description="Идентификатор сессии пользователя")
+    notes: Optional[str] = Field(None, description="Дополнительные заметки")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -15,35 +16,45 @@ class TicketBase(BaseModel):
 class TicketCreate(BaseModel):
     """Схема для создания талона."""
     
-    event_code: str
-    user_identity: str = Field(..., max_length=100)
-    notes: str | None = None
+    event_code: str = Field(..., description="Код мероприятия")
+    session_id: str = Field(..., max_length=100, description="Идентификатор сессии пользователя")
+    notes: Optional[str] = Field(None, description="Дополнительные заметки")
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class TicketUpdate(BaseModel):
-    """Схема для обновления талона."""
+    """Схема для обновления талона (админ)."""
     
-    status: Literal["waiting", "called", "completed", "cancelled"] | None = None
-    notes: str | None = None
-    user_identity: str | None = Field(None, max_length=100)
+    status: Optional[Literal["waiting", "called", "completed", "cancelled"]] = Field(None, description="Статус талона")
+    notes: Optional[str] = Field(None, description="Дополнительные заметки")
+    session_id: Optional[str] = Field(None, max_length=100, description="Идентификатор сессии пользователя")
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class TicketResponse(TicketBase):
+class TicketUpdatePublic(BaseModel):
+    """Схема для обновления талона (публичный)."""
+    
+    notes: Optional[str] = Field(None, description="Дополнительные заметки")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TicketResponse(BaseModel):
     """Схема ответа с талоном."""
     
-    id: int
-    queue_id: int
-    position: int
-    status: str
-    is_deleted: bool
-    created_at: datetime
-    updated_at: datetime
-    called_at: datetime | None
-    completed_at: datetime | None
+    id: int = Field(..., description="ID талона")
+    queue_id: int = Field(..., description="ID очереди")
+    session_id: str = Field(..., description="Идентификатор сессии пользователя")
+    position: int = Field(..., description="Позиция в очереди")
+    status: str = Field(..., description="Статус талона")
+    notes: Optional[str] = Field(None, description="Дополнительные заметки")
+    is_deleted: bool = Field(..., description="Удален ли талон")
+    created_at: datetime = Field(..., description="Время создания")
+    updated_at: datetime = Field(..., description="Время обновления")
+    called_at: Optional[datetime] = Field(None, description="Время вызова")
+    completed_at: Optional[datetime] = Field(None, description="Время завершения")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,22 +62,22 @@ class TicketResponse(TicketBase):
 class TicketCallRequest(BaseModel):
     """Схема для вызова талона."""
     
-    notes: str | None = None
+    notes: Optional[str] = Field(None, description="Дополнительные заметки")
 
 
 class TicketCompleteRequest(BaseModel):
     """Схема для завершения талона."""
     
-    notes: str | None = None
+    notes: Optional[str] = Field(None, description="Дополнительные заметки")
 
 
 class TicketMoveRequest(BaseModel):
     """Схема для перемещения талона."""
     
-    target_queue_id: int
+    target_queue_id: int = Field(..., description="ID целевой очереди")
 
 
 class TicketDeleteRequest(BaseModel):
     """Схема для удаления талона."""
     
-    hard_delete: bool = False
+    hard_delete: bool = Field(False, description="Полное удаление из базы данных")

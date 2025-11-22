@@ -23,6 +23,7 @@ class Queue(Base):
     """
 
     __tablename__ = "queues"
+    __table_args__ = {'extend_existing': True}
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     event_id: Mapped[int] = mapped_column(
