@@ -7,7 +7,7 @@ from app.db.models.queue import Queue
 from app.db.models.event import Event
 from app.schemas.ticket import TicketCreate, TicketUpdate, TicketUpdatePublic, TicketResponse, TicketPositionInfo
 from app.services.crud.queue import get_queues_by_event
-
+from app.services.websockets.notifications import notification_manager
 
 async def create_ticket(db: AsyncSession, ticket_data: TicketCreate) -> tuple[TicketResponse, bool]:
     existing_ticket_result = await db.execute(
@@ -201,8 +201,23 @@ async def call_ticket(db: AsyncSession, ticket_id: int, notes: str | None = None
     
     await db.commit()
     await db.refresh(ticket)
+    
+    try:
+        await notification_manager.send_notification(
+            ticket.session_id,
+            {
+                "type": "called",
+                "message": "Ваш талон вызван! Подойдите к стойке.",
+                "ticket_id": ticket.id,
+                "position": ticket.position,
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+        print(f"Call notification sent to {ticket.session_id}")
+    except Exception as e:
+        print(f"Error sending call notification: {e}")
+    
     return TicketResponse.model_validate(ticket)
-
 
 async def complete_ticket(db: AsyncSession, ticket_id: int, notes: str | None = None) -> TicketResponse | None:
     query = select(Ticket).where(Ticket.id == ticket_id, Ticket.is_deleted == False)
@@ -219,6 +234,21 @@ async def complete_ticket(db: AsyncSession, ticket_id: int, notes: str | None = 
     
     await db.commit()
     await db.refresh(ticket)
+    
+    try:
+        await notification_manager.send_notification(
+            ticket.session_id,
+            {
+                "type": "completed", 
+                "message": "Обслуживание завершено. Спасибо!",
+                "ticket_id": ticket.id,
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+        print(f"Completion notification sent to {ticket.session_id}")
+    except Exception as e:
+        print(f"Error sending completion notification: {e}")
+    
     return TicketResponse.model_validate(ticket)
 
 

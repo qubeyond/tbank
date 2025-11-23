@@ -4,7 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.schemas.ticket import *
 from app.services.crud.ticket import *
-
+from app.services.notification_service import NotificationService
+from app.core.dependencies import get_current_admin
+from app.db.models import Account
 
 router = APIRouter(tags=["public-tickets"])
 
@@ -88,5 +90,24 @@ async def cancel_ticket_route(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Талон не найден или доступ запрещен"
         )
+    
+    return ticket
+
+
+@router.post("/{ticket_id}/call", response_model=TicketResponse)
+async def call_ticket_route(ticket_id: int, call_data: TicketCallRequest, db: AsyncSession = Depends(get_db),
+                            current_admin: Account = Depends(get_current_admin)) -> TicketResponse:
+    ticket = await call_ticket(db, ticket_id, call_data.notes)
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Талон не найден")
+    
+    # Создаем нотификацию о вызове
+    notification_service = NotificationService(db)
+    await notification_service._create_notification(
+        ticket_id,
+        None,
+        "Ваш талон вызван! Подойдите к стойке.",
+        "called"
+    )
     
     return ticket
