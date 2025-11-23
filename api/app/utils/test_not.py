@@ -9,6 +9,7 @@ class NotificationTester:
     def __init__(self):
         self.session = None
         self.access_token = None
+        self.notifications_received = []
     
     async def __aenter__(self):
         self.session = aiohttp.ClientSession()
@@ -27,7 +28,7 @@ class NotificationTester:
         return False
     
     async def create_test_event(self):
-        event_data = {"name": "Notification Test Event", "is_active": True}
+        event_data = {"name": "Final Notification Test", "is_active": True}
         headers = {"Authorization": f"Bearer {self.access_token}"}
         async with self.session.post(f"{API_BASE}/event/", json=event_data, headers=headers) as resp:
             if resp.status == 201:
@@ -43,7 +44,7 @@ class NotificationTester:
         return None
     
     async def create_test_ticket(self, event_code: str, session_id: str):
-        ticket_data = {"event_code": event_code, "session_id": session_id, "notes": "Test ticket"}
+        ticket_data = {"event_code": event_code, "session_id": session_id, "notes": "Final test"}
         async with self.session.post(f"{API_BASE}/ticket/", json=ticket_data) as resp:
             if resp.status == 201:
                 result = await resp.json()
@@ -51,29 +52,32 @@ class NotificationTester:
                     return result['ticket']
         return None
     
-    async def test_websocket_realtime(self, session_id: str):
-        """Тестируем WebSocket в реальном времени"""
+    async def websocket_listener(self, session_id: str):
+        """Слушаем WebSocket сообщения в фоне"""
         try:
             async with self.session.ws_connect(f"ws://localhost:8000/api/notifications/ws/{session_id}") as ws:
-                print("✅ WebSocket connected")
+                print("🎧 WebSocket listener started")
                 
-                # Получаем приветственное сообщение
-                welcome = await asyncio.wait_for(ws.receive(), timeout=3.0)
-                print(f"✅ Welcome: {welcome.data}")
+                # Получаем приветствие
+                welcome = await ws.receive()
+                print(f"✅ {welcome.data}")
                 
-                # Тестируем ping-pong
-                await ws.send_str("ping")
-                pong = await asyncio.wait_for(ws.receive(), timeout=3.0)
-                print(f"✅ Ping-pong: {pong.data}")
-                
-                return ws
-                    
+                # Слушаем сообщения
+                async for msg in ws:
+                    if msg.type == aiohttp.WSMsgType.TEXT:
+                        if msg.data:  # Игнорируем None
+                            notification = json.loads(msg.data)
+                            self.notifications_received.append(notification)
+                            print(f"📨 Notification: {notification}")
+                    elif msg.type == aiohttp.WSMsgType.ERROR:
+                        print(f"WebSocket error: {msg.data}")
+                        break
+                        
         except Exception as e:
-            print(f"❌ WebSocket error: {e}")
-            return None
+            print(f"WebSocket listener error: {e}")
     
-    async def call_ticket_and_wait_notification(self, ws, ticket_id: int):
-        """Вызываем талон и ждем нотификацию"""
+    async def call_ticket(self, ticket_id: int):
+        """Вызываем талон"""
         headers = {"Authorization": f"Bearer {self.access_token}"}
         call_data = {"notes": "Test call"}
         
@@ -85,18 +89,11 @@ class NotificationTester:
         ) as resp:
             if resp.status == 200:
                 print("✅ Ticket called")
-        
-        # Ждем нотификацию
-        try:
-            notification = await asyncio.wait_for(ws.receive(), timeout=5.0)
-            print(f"📨 Notification: {notification.data}")
-            return True
-        except asyncio.TimeoutError:
-            print("ℹ️  No notification received (timeout)")
-            return False
+                return True
+        return False
     
-    async def complete_ticket_and_wait_notification(self, ws, ticket_id: int):
-        """Завершаем талон и ждем нотификацию"""
+    async def complete_ticket(self, ticket_id: int):
+        """Завершаем талон"""
         headers = {"Authorization": f"Bearer {self.access_token}"}
         complete_data = {"notes": "Test completion"}
         
@@ -108,18 +105,11 @@ class NotificationTester:
         ) as resp:
             if resp.status == 200:
                 print("✅ Ticket completed")
-        
-        # Ждем нотификацию
-        try:
-            notification = await asyncio.wait_for(ws.receive(), timeout=5.0)
-            print(f"📨 Completion notification: {notification.data}")
-            return True
-        except asyncio.TimeoutError:
-            print("ℹ️  No completion notification (timeout)")
-            return False
+                return True
+        return False
     
     async def run_test(self):
-        print("🚀 Testing notification system...")
+        print("🚀 Final notification test...")
         
         # Логин
         if not await self.admin_login():
@@ -140,38 +130,50 @@ class NotificationTester:
         print(f"✅ Queue: {queue['name']}")
         
         # Создаем талон
-        session_id = f"test_{datetime.now().strftime('%H%M%S')}"
+        session_id = f"final_test_{datetime.now().strftime('%H%M%S')}"
         ticket = await self.create_test_ticket(event['code'], session_id)
         if not ticket:
             print("❌ Ticket creation failed")
             return False
         print(f"✅ Ticket: {ticket['id']}")
         
-        # Подключаем WebSocket
-        ws = await self.test_websocket_realtime(session_id)
-        if not ws:
-            return False
+        # Запускаем WebSocket слушатель в фоне
+        listener_task = asyncio.create_task(self.websocket_listener(session_id))
         
-        # Тестируем вызов талона
-        call_success = await self.call_ticket_and_wait_notification(ws, ticket['id'])
+        # Ждем подключения
+        await asyncio.sleep(2)
         
-        # Тестируем завершение талона
-        complete_success = await self.complete_ticket_and_wait_notification(ws, ticket['id'])
+        # Вызываем талон
+        await self.call_ticket(ticket['id'])
+        await asyncio.sleep(1)
         
-        # Закрываем соединение
-        await ws.close()
+        # Завершаем талон
+        await self.complete_ticket(ticket['id'])
+        await asyncio.sleep(1)
         
-        if call_success or complete_success:
-            print("🎉 Notification test completed successfully!")
+        # Останавливаем слушатель
+        listener_task.cancel()
+        try:
+            await listener_task
+        except asyncio.CancelledError:
+            pass
+        
+        # Проверяем полученные нотификации
+        print(f"\n📊 Received {len(self.notifications_received)} notifications:")
+        for i, notification in enumerate(self.notifications_received, 1):
+            print(f"  {i}. {notification.get('type', 'unknown')}: {notification.get('message', 'no message')}")
+        
+        if len(self.notifications_received) > 0:
+            print("🎉 Notifications are working!")
             return True
         else:
-            print("💥 No notifications were received")
-            return True  # Все равно считаем успехом, т.к. система работает
+            print("💥 No notifications received")
+            return False
 
 async def main():
     async with NotificationTester() as tester:
         success = await tester.run_test()
-        print(f"Result: {'PASS' if success else 'FAIL'}")
+        print(f"\nResult: {'PASS' if success else 'FAIL'}")
         exit(0 if success else 1)
 
 if __name__ == "__main__":
