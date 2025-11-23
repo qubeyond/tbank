@@ -59,6 +59,12 @@ class TicketResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class TicketCreateResponse(BaseModel):
+    ticket: TicketResponse
+    is_existing_ticket: bool
+    message: str
+
+
 class TicketCallRequest(BaseModel):
     """Схема для вызова талона."""
     
@@ -81,3 +87,15 @@ class TicketDeleteRequest(BaseModel):
     """Схема для удаления талона."""
     
     hard_delete: bool = Field(False, description="Полное удаление из базы данных")
+
+
+class TicketPositionInfo(BaseModel):
+    """Схема с информацией о позиции талона."""
+    
+    ticket_id: int
+    queue_id: int
+    position: int
+    ahead_count: int
+    estimated_wait_time: int
+
+    model_config = ConfigDict(from_attributes=True)

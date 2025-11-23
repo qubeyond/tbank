@@ -3,32 +3,17 @@ from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.db import get_db
+from app.db.session import get_db
 from app.db.models import Account
 from app.core.security import security_service
-from app.schemas import AdminResponse, AdminTestResponse
+from app.schemas.admin import *
 
 
 router = APIRouter(tags=["private-management"])
 security = HTTPBearer()
 
 
-async def get_current_admin(
-    token: str = Depends(security),
-    db: AsyncSession = Depends(get_db)
-) -> Account:
-    """
-    Args:
-        token: JWT токен из заголовка Authorization
-        db: Сессия базы данных
-        
-    Returns:
-        Account: Объект администратора
-        
-    Raises:
-        HTTPException: 401 если токен невалидный или администратор не найден
-    """
-
+async def get_current_admin(token: str = Depends(security), db: AsyncSession = Depends(get_db)) -> Account:
     payload = security_service.verify_access_token(token.credentials)
     if not payload:
         raise HTTPException(
@@ -60,14 +45,6 @@ async def get_current_admin(
     description="Тестовый эндпоинт для проверки корректности JWT аутентификации и получения информации о текущем администраторе."
 )
 async def admin_test_route(current_admin: Account = Depends(get_current_admin)):
-    """
-    Args:
-        current_admin: Текущий аутентифицированный администратор
-        
-    Returns:
-        AdminTestResponse: Результат проверки аутентификации с информацией об администраторе
-    """
-
     return AdminTestResponse(
         message="Admin authentication successful",
         admin=AdminResponse(
@@ -87,14 +64,6 @@ async def admin_test_route(current_admin: Account = Depends(get_current_admin)):
     description="Возвращает полную информацию о текущем аутентифицированном администраторе."
 )
 async def get_current_admin_info(current_admin: Account = Depends(get_current_admin)):
-    """
-    Args:
-        current_admin: Текущий аутентифицированный администратор
-        
-    Returns:
-        AdminResponse: Информация об администраторе
-    """
-    
     return AdminResponse(
         id=current_admin.id,
         username=current_admin.username,

@@ -1,47 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import get_db
+from app.db.session import get_db
 from app.db.models import Account
 from app.core.dependencies import get_current_admin
-from app.schemas.queue import (
-    QueueCreate, QueueResponse, QueueStatus, QueueUpdate, QueueDeleteRequest
-)
-from app.utils.crud.queue import (
-    create_queue, get_queue, get_queues_by_event, update_queue, 
-    delete_queue, call_next, get_queue_status, reset_queue
-)
+from app.schemas.queue import *
+from app.services.crud.queue import *
 
 
 router = APIRouter(tags=["private-queues"])
 
 
-# POST
 @router.post(
     "/", 
     response_model=QueueResponse, 
-    status_code=status.HTTP_201_CREATED,
-    summary="Создать очередь",
-    description="Создание новой очереди для мероприятия. Имя очереди генерируется автоматически (A, B, C...)."
+    status_code=status.HTTP_201_CREATED
 )
-async def create_queue_route(
-    queue_data: QueueCreate,
-    db: AsyncSession = Depends(get_db),
-    current_admin: Account = Depends(get_current_admin)
-) -> QueueResponse:
-    """
-    Args:
-        queue_data: Данные для создания очереди
-        db: Сессия базы данных
-        current_admin: Текущий администратор
-        
-    Returns:
-        QueueResponse: Созданная очередь
-        
-    Raises:
-        HTTPException: 400 при ошибке валидации данных
-    """
-    
+async def create_queue_route(queue_data: QueueCreate, db: AsyncSession = Depends(get_db),
+                             current_admin: Account = Depends(get_current_admin)) -> QueueResponse:
     try:
         return await create_queue(db, queue_data)
     except ValueError as e:
@@ -51,58 +27,22 @@ async def create_queue_route(
         )
 
 
-# GET
 @router.get(
     "/", 
-    response_model=list[QueueResponse],
-    summary="Получить очереди мероприятия",
-    description="Получение списка всех очередей мероприятия. Поддерживает фильтрацию по удаленным очередям."
+    response_model=list[QueueResponse]
 )
-async def get_event_queues(
-    event_id: int = Query(...),
-    include_deleted: bool = Query(False),
-    db: AsyncSession = Depends(get_db),
-    current_admin: Account = Depends(get_current_admin)
-) -> list[QueueResponse]:
-    """
-    Args:
-        event_id: ID мероприятия
-        include_deleted: Включать удаленные очереди
-        db: Сессия базы данных
-        current_admin: Текущий администратор
-        
-    Returns:
-        list[QueueResponse]: Список очередей мероприятия
-    """
-    
+async def get_event_queues(event_id: int = Query(...), include_deleted: bool = Query(False), db: AsyncSession = Depends(get_db),
+                           current_admin: Account = Depends(get_current_admin)) -> list[QueueResponse]:
     queues = await get_queues_by_event(db, event_id, include_deleted)
     return queues
 
 
 @router.get(
     "/{queue_id}", 
-    response_model=QueueResponse,
-    summary="Получить очередь по ID", 
-    description="Получение полной информации об очереди по ее идентификатору."
+    response_model=QueueResponse
 )
-async def get_queue_route(
-    queue_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_admin: Account = Depends(get_current_admin)
-) -> QueueResponse:
-    """
-    Args:
-        queue_id: ID очереди
-        db: Сессия базы данных
-        current_admin: Текущий администратор
-        
-    Returns:
-        QueueResponse: Найденная очередь
-        
-    Raises:
-        HTTPException: 404 если очередь не найдена
-    """
-    
+async def get_queue_route(queue_id: int, db: AsyncSession = Depends(get_db),
+                          current_admin: Account = Depends(get_current_admin)) -> QueueResponse:
     queue = await get_queue(db, queue_id)
     if not queue:
         raise HTTPException(
@@ -114,65 +54,25 @@ async def get_queue_route(
 
 @router.get(
     "/{queue_id}/status", 
-    response_model=QueueStatus,
-    summary="Получить статус очереди",
-    description="Получение текущего статуса очереди: количество ожидающих, обслуживаемых и завершенных талонов."
+    response_model=QueueStatus
 )
-async def get_queue_status_route(
-    queue_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_admin: Account = Depends(get_current_admin)
-) -> QueueStatus:
-    """
-    Args:
-        queue_id: ID очереди
-        db: Сессия базы данных
-        current_admin: Текущий администратор
-        
-    Returns:
-        QueueStatus: Статус очереди
-        
-    Raises:
-        HTTPException: 404 если очередь не найдена
-    """
-    
+async def get_queue_status_route(queue_id: int, db: AsyncSession = Depends(get_db),
+                                 current_admin: Account = Depends(get_current_admin)) -> QueueStatus:
     status_data = await get_queue_status(db, queue_id)
     if not status_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Очередь не найдена"
         )
-    return QueueStatus(**status_data)
+    return status_data
 
 
-# PUT
 @router.put(
     "/{queue_id}", 
-    response_model=QueueResponse,
-    summary="Обновить очередь",
-    description="Обновление информации об очереди. Позволяет изменить имя, активность или текущую позицию."
+    response_model=QueueResponse
 )
-async def update_queue_route(
-    queue_id: int,
-    queue_data: QueueUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_admin: Account = Depends(get_current_admin)
-) -> QueueResponse:
-    """
-    Args:
-        queue_id: ID очереди для обновления
-        queue_data: Новые данные очереди
-        db: Сессия базы данных
-        current_admin: Текущий администратор
-        
-    Returns:
-        QueueResponse: Обновленная очередь
-        
-    Raises:
-        HTTPException: 404 если очередь не найдена
-        HTTPException: 400 при ошибке валидации данных
-    """
-    
+async def update_queue_route(queue_id: int, queue_data: QueueUpdate, db: AsyncSession = Depends(get_db),
+                             current_admin: Account = Depends(get_current_admin)) -> QueueResponse: 
     try:
         queue = await update_queue(db, queue_id, queue_data)
         if not queue:
@@ -188,33 +88,11 @@ async def update_queue_route(
         )
 
 
-# DELETE
 @router.delete(
-    "/{queue_id}",
-    summary="Удалить очередь",
-    description="Удаление очереди из системы. Поддерживает soft delete и hard delete. Возможность перемещения талонов в другую очередь."
+    "/{queue_id}"
 )
-async def delete_queue_route(
-    queue_id: int,
-    delete_request: QueueDeleteRequest,
-    db: AsyncSession = Depends(get_db),
-    current_admin: Account = Depends(get_current_admin)
-) -> dict:
-    """
-    Args:
-        queue_id: ID очереди для удаления
-        delete_request: Параметры удаления
-        db: Сессия базы данных
-        current_admin: Текущий администратор
-        
-    Returns:
-        dict: Результат удаления
-        
-    Raises:
-        HTTPException: 404 если очередь не найдена
-        HTTPException: 400 при ошибке валидации данных
-    """
-    
+async def delete_queue_route(queue_id: int, delete_request: QueueDeleteRequest, db: AsyncSession = Depends(get_db),
+                             current_admin: Account = Depends(get_current_admin)) -> dict:
     try:
         success = await delete_queue(
             db, 
@@ -247,31 +125,12 @@ async def delete_queue_route(
         )
 
 
-# POST actions
 @router.post(
     "/{queue_id}/next", 
-    response_model=QueueResponse,
-    summary="Вызвать следующего",
-    description="Вызов следующего талона в очереди. Увеличивает текущую позицию очереди на 1."
+    response_model=QueueResponse
 )
-async def call_next_route(
-    queue_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_admin: Account = Depends(get_current_admin)
-) -> QueueResponse:
-    """
-    Args:
-        queue_id: ID очереди
-        db: Сессия базы данных
-        current_admin: Текущий администратор
-        
-    Returns:
-        QueueResponse: Обновленная очередь
-        
-    Raises:
-        HTTPException: 404 если очередь не найдена
-    """
-    
+async def call_next_route(queue_id: int, db: AsyncSession = Depends(get_db),
+                          current_admin: Account = Depends(get_current_admin)) -> QueueResponse:
     queue = await call_next(db, queue_id)
     if not queue:
         raise HTTPException(
@@ -283,28 +142,10 @@ async def call_next_route(
 
 @router.post(
     "/{queue_id}/reset", 
-    response_model=QueueResponse,
-    summary="Сбросить очередь",
-    description="Сброс текущей позиции очереди на 0. Не влияет на талоны, только на счетчик текущей позиции."
+    response_model=QueueResponse
 )
-async def reset_queue_route(
-    queue_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_admin: Account = Depends(get_current_admin)
-) -> QueueResponse:
-    """
-    Args:
-        queue_id: ID очереди
-        db: Сессия базы данных
-        current_admin: Текущий администратор
-        
-    Returns:
-        QueueResponse: Обновленная очередь
-        
-    Raises:
-        HTTPException: 404 если очередь не найдена
-    """
-    
+async def reset_queue_route(queue_id: int, db: AsyncSession = Depends(get_db),
+                            current_admin: Account = Depends(get_current_admin)) -> QueueResponse:
     queue = await reset_queue(db, queue_id)
     if not queue:
         raise HTTPException(

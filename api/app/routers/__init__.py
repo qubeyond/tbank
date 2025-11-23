@@ -11,6 +11,9 @@ from .analytics.event_analytics import router as event_analytics_router
 from .analytics.queue_analytics import router as queue_analytics_router
 from .analytics.ticket_analytics import router as ticket_analytics_router
 
+from .websockets.ticket import router as ticket_ws_router
+from .websockets.management import router as websocket_management_router  
+
 __all__ = [
     "private_auth_router", 
     "private_management_router",
@@ -21,5 +24,7 @@ __all__ = [
     "public_ticket_router",
     "event_analytics_router",
     "queue_analytics_router",
-    "ticket_analytics_router"
+    "ticket_analytics_router",
+    "ticket_ws_router",
+    "websocket_management_router"
 ]

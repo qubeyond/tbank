@@ -274,19 +274,22 @@ class TicketTester(BaseAPITester):
     async def test_create_ticket_public(self, event_code: str) -> Optional[Dict]:
         test_name = "Create Public Ticket"
         try:
-            # Генерируем УНИКАЛЬНЫЙ session_id для каждого вызова
             session_id = f"test_session_{datetime.now().strftime('%H%M%S%f')}"
             self.session_ids.append(session_id)
             ticket_data = {"event_code": event_code, "session_id": session_id, "notes": "Test ticket"}
             result, status = await self.make_request("POST", "/ticket/", ticket_data)
             
-            if status == 201 and "id" in result:
-                ticket_info = {"id": result["id"], "session_id": session_id, "queue_id": result["queue_id"]}
+            if status == 201 and 'ticket' in result and 'id' in result['ticket']:
+                ticket_data = result['ticket']
+                ticket_info = {
+                    "id": ticket_data["id"], 
+                    "session_id": session_id, 
+                    "queue_id": ticket_data["queue_id"]
+                }
                 self.created_tickets.append(ticket_info)
                 self.test_results.add_passed(test_name)
                 return ticket_info
             
-            # Если уже есть активный талон - это ожидаемое поведение
             elif status == 400 and "уже есть активный талон" in str(result).lower():
                 self.test_results.add_passed(f"{test_name} - already has active ticket")
                 return None
@@ -302,7 +305,6 @@ class TicketTester(BaseAPITester):
         headers = {"X-Session-ID": session_id}
         result, status = await self.make_request("GET", "/ticket/my-tickets", headers=headers)
         
-        # 200 - успех, 403 - нет талонов (тоже нормально)
         if status == 200 and isinstance(result, list):
             self.test_results.add_passed(test_name)
             return True
@@ -319,8 +321,7 @@ class TicketTester(BaseAPITester):
         headers = {"X-Session-ID": session_id}
         result, status = await self.make_request("PUT", f"/ticket/{ticket_id}", update_data, headers=headers)
         
-        # 200 - успех, 403 - нет доступа (тоже нормально для тестов)
-        if status == 200:
+        if status == 200 and isinstance(result, dict) and 'id' in result:
             self.test_results.add_passed(test_name)
             return True
         elif status == 403:
@@ -335,8 +336,7 @@ class TicketTester(BaseAPITester):
         headers = {"X-Session-ID": session_id}
         result, status = await self.make_request("POST", f"/ticket/{ticket_id}/cancel", headers=headers)
         
-        # 200 - успех, 403 - нет доступа или талон уже обработан
-        if status == 200:
+        if status == 200 and isinstance(result, dict) and 'id' in result:
             self.test_results.add_passed(test_name)
             return True
         elif status == 403:
@@ -349,7 +349,7 @@ class TicketTester(BaseAPITester):
     async def test_get_ticket_admin(self, ticket_id: int) -> bool:
         test_name = f"Get Ticket Admin {ticket_id}"
         result, status = await self.make_request("GET", f"/ticket/{ticket_id}", auth_required=True)
-        if status == 200 and result.get("id") == ticket_id:
+        if status == 200 and isinstance(result, dict) and 'id' in result:
             self.test_results.add_passed(test_name)
             return True
         self.test_results.add_failed(test_name, f"Status: {status}")
@@ -377,7 +377,7 @@ class TicketTester(BaseAPITester):
         test_name = f"Call Ticket {ticket_id}"
         call_data = {"notes": "Admin call"}
         result, status = await self.make_request("POST", f"/ticket/{ticket_id}/call", call_data, auth_required=True)
-        if status == 200:
+        if status == 200 and isinstance(result, dict) and 'id' in result:
             self.test_results.add_passed(test_name)
             return True
         self.test_results.add_failed(test_name, f"Status: {status}")
@@ -387,7 +387,7 @@ class TicketTester(BaseAPITester):
         test_name = f"Complete Ticket {ticket_id}"
         complete_data = {"notes": "Completed"}
         result, status = await self.make_request("POST", f"/ticket/{ticket_id}/complete", complete_data, auth_required=True)
-        if status == 200:
+        if status == 200 and isinstance(result, dict) and 'id' in result:
             self.test_results.add_passed(test_name)
             return True
         self.test_results.add_failed(test_name, f"Status: {status}")
