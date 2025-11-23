@@ -14,7 +14,7 @@ function App() {
         <Route path="/admin/queues/:eventId" element={<AdminQueue />} />
         <Route path="/user" element={<User />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<AdmLogin />} />
+        <Route path="/" element={<Login />} />
       </Routes>
     </BrowserRouter>
   )
