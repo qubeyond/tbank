@@ -1,4 +1,3 @@
-// User.jsx
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './User.css'
@@ -30,34 +29,59 @@ function User() {
     return () => clearInterval(timer)
   }, [])
 
+  const createNewTicket = async () => {
+    const sessionId = localStorage.getItem('sessionId')
+    const eventCode = localStorage.getItem('currentEventCode')
+    
+    if (!sessionId || !eventCode) {
+      throw new Error('Не найдены данные сессии или мероприятия')
+    }
+
+    const ticket = await apiCall('/ticket/', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_code: eventCode,
+        session_id: sessionId,
+        notes: ''
+      })
+    })
+
+    localStorage.setItem('currentTicketId', ticket.id.toString())
+    return ticket
+  }
+
   const loadTicketData = async () => {
     try {
       setIsLoading(true)
-      const ticketId = localStorage.getItem('currentTicketId')
-      const sessionId = localStorage.getItem('sessionId')
       
-      console.log('Loading ticket data for ID:', ticketId)
-
-      if (!ticketId || !sessionId) {
-        navigate('/login')
-        return
+      const sessionId = localStorage.getItem('sessionId')
+      const eventCode = localStorage.getItem('currentEventCode')
+      
+      if (!sessionId || !eventCode) {
+        throw new Error('Не найдены данные сессии или мероприятия')
       }
 
-      // Получаем талон по ID
-      const ticket = await apiCall(`/ticket/${ticketId}`)
-      console.log('Ticket loaded:', ticket)
+      let ticket
+      const ticketId = localStorage.getItem('currentTicketId')
 
-      // Получаем данные очереди
+      if (ticketId && ticketId !== 'null' && ticketId !== 'undefined') {
+        try {
+          const numericTicketId = parseInt(ticketId)
+          if (!isNaN(numericTicketId)) {
+            ticket = await apiCall(`/ticket/${numericTicketId}`)
+          }
+        } catch (err) {
+          console.log('Error loading ticket, creating new one')
+        }
+      }
+
+      if (!ticket) {
+        ticket = await createNewTicket()
+      }
+
       const queue = await apiCall(`/queue/${ticket.queue_id}`)
-      console.log('Queue loaded:', queue)
-
-      // Получаем данные мероприятия
       const event = await apiCall(`/event/${queue.event_id}`)
-      console.log('Event loaded:', event)
-
-      // Получаем статус очереди для информации о текущей позиции
       const queueStatus = await apiCall(`/queue/${ticket.queue_id}/status`)
-      console.log('Queue status:', queueStatus)
 
       setTicketData({
         ...ticket,
@@ -71,7 +95,7 @@ function User() {
 
     } catch (err) {
       console.error('Error loading ticket data:', err)
-      setError('Ошибка загрузки данных талона: ' + err.message)
+      setError('Ошибка загрузки данных: ' + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -80,11 +104,10 @@ function User() {
   const calculateTimeLeft = () => {
     if (!ticketData) return '--:--:--'
     
-    const positionDiff = ticketData.position - ticketData.current_position
-    if (positionDiff <= 0) return '00:00:00'
+    const peopleBefore = ticketData.position - ticketData.current_position
+    if (peopleBefore <= 0) return '00:00:00'
     
-    // Предполагаем среднее время обслуживания 5 минут на человека
-    const estimatedMinutes = positionDiff * 5
+    const estimatedMinutes = peopleBefore * 5
     const hours = Math.floor(estimatedMinutes / 60)
     const minutes = estimatedMinutes % 60
     
@@ -99,27 +122,64 @@ function User() {
 
   const handleSupportSubmit = async () => {
     try {
-      console.log('Sending support message:', supportMessage)
-      // Здесь будет вызов API для отправки сообщения в техподдержку
+      await apiCall(`/ticket/${ticketData.id}`, {
+        method: 'PUT',
+        headers: {
+          'X-Session-ID': localStorage.getItem('sessionId') || ''
+        },
+        body: JSON.stringify({
+          notes: supportMessage
+        })
+      })
+      
       alert('Сообщение отправлено в техподдержку')
       setSupportMessage('')
       setShowSupportModal(false)
+      loadTicketData()
     } catch (err) {
-      console.error('Error sending support message:', err)
       alert('Ошибка отправки сообщения')
     }
   }
 
   const handleComplaintSubmit = async () => {
     try {
-      console.log('Sending complaint:', complaintType)
-      // Здесь будет вызов API для отправки жалобы
+      const complaintNote = `ЖАЛОБА: ${complaintType}`
+      
+      await apiCall(`/ticket/${ticketData.id}`, {
+        method: 'PUT',
+        headers: {
+          'X-Session-ID': localStorage.getItem('sessionId') || ''
+        },
+        body: JSON.stringify({
+          notes: complaintNote
+        })
+      })
+      
       alert('Жалоба отправлена')
       setComplaintType('')
       setShowComplaintModal(false)
+      loadTicketData()
     } catch (err) {
-      console.error('Error sending complaint:', err)
       alert('Ошибка отправки жалобы')
+    }
+  }
+
+  const handleCancelTicket = async () => {
+    if (window.confirm('Вы уверены, что хотите отменить талон?')) {
+      try {
+        await apiCall(`/ticket/${ticketData.id}/cancel`, {
+          method: 'POST',
+          headers: {
+            'X-Session-ID': localStorage.getItem('sessionId') || ''
+          }
+        })
+        
+        alert('Талон отменен')
+        localStorage.removeItem('currentTicketId')
+        navigate('/login')
+      } catch (err) {
+        alert('Ошибка отмены талона')
+      }
     }
   }
 
@@ -129,6 +189,13 @@ function User() {
 
   const handleRefresh = () => {
     loadTicketData()
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentTicketId')
+    localStorage.removeItem('sessionId')
+    localStorage.removeItem('currentEventCode')
+    navigate('/login')
   }
 
   const getStatusText = (status) => {
@@ -154,7 +221,9 @@ function User() {
   if (isLoading) {
     return (
       <div className={`app ${isDark ? 'dark' : 'light'}`}>
-        <div className="loading">Загрузка данных талона...</div>
+        <div className="loading">
+          <i className="fas fa-spinner fa-spin"></i> Загрузка данных талона...
+        </div>
       </div>
     )
   }
@@ -163,27 +232,34 @@ function User() {
     return (
       <div className={`app ${isDark ? 'dark' : 'light'}`}>
         <div className="error-message">
-          {error}
-          <button onClick={loadTicketData} className="retry-btn">
-            Попробовать снова
-          </button>
-          <button onClick={() => navigate('/login')} className="retry-btn">
-            Вернуться к входу
-          </button>
+          <i className="fas fa-exclamation-triangle"></i> {error}
+          <div className="error-actions">
+            <button onClick={loadTicketData} className="retry-btn">
+              <i className="fas fa-redo"></i> Попробовать снова
+            </button>
+            // <button onClick={handleLogout} className="retry-btn logout-btn">
+            //   <i className="fas fa-sign-out-alt"></i> Выйти
+            // </button>
+          </div>
         </div>
       </div>
     )
   }
 
+  const peopleBefore = ticketData.position - ticketData.current_position
+
   return (
     <div className={`app ${isDark ? 'dark' : 'light'}`}>
-      <button className="theme-toggle" onClick={toggleTheme}>
-        {isDark ? ' ☼ ' : ' ☾ '}
-      </button>
+      <div className="header-controls">
+        <button className="theme-toggle" onClick={toggleTheme}>
+
+          {isDark ? ' ☼ ' : ' ☾ '}
+         </button>
+      </div>
       
       <svg className="background-line" width="100%" height="100%">
         <path
-          d="M-100,250 C150,50 300,450 450,250 S600,50 850,350 S900,450 2300,650"
+          d="M-100,250 C150,50 300,450 450,250 S600,50 850,350 S900,450 2400,650"
           fill="none" 
           strokeWidth="90" 
         />
@@ -202,16 +278,20 @@ function User() {
           
           <div className="ticket-info">
             <div className="info-row">
-              <span>Текущая позиция:</span>
-              <span>{ticketData?.current_position}</span>
+              <span>Ваш номер:</span>
+              <span className="position-number">{ticketData?.position}</span>
             </div>
             <div className="info-row">
-              <span>Ваша позиция:</span>
-              <span>{ticketData?.position}</span>
-            </div>
-            <div className="info-row">
-              <span>Людей перед вами:</span>
-              <span>{Math.max(0, (ticketData?.position || 0) - (ticketData?.current_position || 0))}</span>
+              <span>Перед вами:</span>
+              <span>
+                {ticketData?.current_position === 0 && ticketData?.position === 1 ? (
+                  <span className="you-next">Вы следующие!</span>
+                ) : ticketData?.current_position === 0 ? (
+                  <span>{ticketData.position - 1} человек</span>
+                ) : (
+                  <span>{peopleBefore} человек</span>
+                )}
+              </span>
             </div>
             <div className="info-row">
               <span>Статус:</span>
@@ -222,7 +302,7 @@ function User() {
             {ticketData?.notes && (
               <div className="info-row">
                 <span>Примечания:</span>
-                <span>{ticketData.notes}</span>
+                <span className="notes-text">{ticketData.notes}</span>
               </div>
             )}
           </div>
@@ -247,21 +327,23 @@ function User() {
           >
             <i className="fas fa-sync-alt"></i> Обновить
           </button>
+          <button 
+            className="action-btn cancel-btn"
+            onClick={handleCancelTicket}
+          >
+            <i className="fas fa-times"></i> Отменить
+          </button>
         </div>
       </div>
 
-      {/* Модальное окно техподдержки */}
       {showSupportModal && (
         <div className="modal-overlay">
           <div className="modal">
             <h3>Техническая поддержка</h3>
-            <p className="modal-description">
-              Опишите вашу проблему, и мы постараемся помочь вам как можно скорее.
-            </p>
             <textarea
               value={supportMessage}
               onChange={(e) => setSupportMessage(e.target.value)}
-              placeholder="Опишите вашу проблему подробно..."
+              placeholder="Опишите вашу проблему..."
               rows={6}
               className="support-textarea"
             />
@@ -284,14 +366,10 @@ function User() {
         </div>
       )}
 
-      {/* Модальное окно жалобы */}
       {showComplaintModal && (
         <div className="modal-overlay">
           <div className="modal">
             <h3>Отправка жалобы</h3>
-            <p className="modal-description">
-              Выберите тип жалобы. Мы рассмотрим её в кратчайшие сроки.
-            </p>
             <div className="complaint-options">
               {complaintTypes.map(type => (
                 <label key={type} className="complaint-option">
@@ -318,7 +396,7 @@ function User() {
                 onClick={handleComplaintSubmit}
                 disabled={!complaintType}
               >
-                Отправить жалобу
+                Отправить
               </button>
             </div>
           </div>

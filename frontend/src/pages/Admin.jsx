@@ -169,7 +169,7 @@ function Admin() {
           d={` M-100,250 
                C150,50 280,450 450,250 
                S600,50 1050,550 
-               S1010,450 1800,650 `}
+               S1010,450 2300,650 `}
           fill="none" 
           strokeWidth="60" 
         />
@@ -177,7 +177,7 @@ function Admin() {
       <svg className="background-line2" width="100%" height="100%">
         <path
           d={` M-1800,650 
-               C1950,850 200,250 1950,150`}
+               C1950,850 200,250 2350,150`}
           fill="none" 
           strokeWidth="90" 
         />

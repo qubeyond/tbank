@@ -180,3 +180,52 @@
   color: white;
   border-color: #555;
 }
+
+.error-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 12px 20px;
+  color: #721c24;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  min-width: 300px;
+  max-width: 90%;
+  animation: slideUp 0.3s ease-out;
+}
+
+.login-page.dark .error-toast {
+  background: #2d1b1f;
+  border-color: #842029;
+  color: #ea868f;
+}
+
+.error-toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.error-icon {
+  font-size: 16px;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Убираем старый стиль ошибки */
+.error-message {
+  display: none;
+}

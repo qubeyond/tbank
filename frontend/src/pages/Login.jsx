@@ -12,54 +12,35 @@ function Login() {
   const [deviceFingerprint, setDeviceFingerprint] = useState('')
   const navigate = useNavigate()
 
-  // Генерация фингерпринта устройства
   const generateDeviceFingerprint = async () => {
     try {
-      // Пробуем получить более стабильный идентификатор
       const components = []
-      
-      // User agent
       components.push(navigator.userAgent)
-      
-      // Language
       components.push(navigator.language)
-      
-      // Timezone
       components.push(Intl.DateTimeFormat().resolvedOptions().timeZone)
-      
-      // Screen properties
       components.push(`${screen.width}x${screen.height}`)
       components.push(screen.colorDepth)
-      
-      // Hardware concurrency
       components.push(navigator.hardwareConcurrency || 'unknown')
-      
-      // Platform
       components.push(navigator.platform)
       
-      // Canvas fingerprint (упрощенный)
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
       ctx.textBaseline = 'top'
       ctx.font = '14px Arial'
       ctx.fillText('DeviceFingerprint', 2, 2)
       const canvasData = canvas.toDataURL()
-      components.push(canvasData.substring(canvasData.length - 100)) // берем часть данных
+      components.push(canvasData.substring(canvasData.length - 100))
       
-      // Создаем хэш из всех компонентов
       const fingerprintString = components.join('|')
       let hash = 0
       for (let i = 0; i < fingerprintString.length; i++) {
         const char = fingerprintString.charCodeAt(i)
         hash = ((hash << 5) - hash) + char
-        hash = hash & hash // Convert to 32bit integer
+        hash = hash & hash
       }
       
       return `device_${Math.abs(hash).toString(36)}`
-      
     } catch (err) {
-      console.warn('Fingerprint generation failed, using fallback:', err)
-      // Фолбэк на основе localStorage
       let storedFingerprint = localStorage.getItem('deviceFingerprint')
       if (!storedFingerprint) {
         storedFingerprint = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -70,7 +51,6 @@ function Login() {
   }
 
   useEffect(() => {
-    // Генерируем фингерпринт при загрузке компонента
     generateDeviceFingerprint().then(setDeviceFingerprint)
   }, [])
 
@@ -78,7 +58,7 @@ function Login() {
     e.preventDefault()
     
     if (!deviceFingerprint) {
-      setError('Инициализация устройства... Пожалуйста, подождите')
+      setError('Инициализация устройства...')
       return
     }
     
@@ -86,14 +66,7 @@ function Login() {
     setIsLoading(true)
 
     try {
-      console.log('📤 Creating ticket with:', {
-        event_code: eventCode.trim(),
-        session_id: deviceFingerprint,
-        notes: notes.trim() || ''
-      })
-
-      // Создаем талон
-      const ticket = await apiCall('/ticket/', {
+      const response = await apiCall('/ticket/', {
         method: 'POST',
         body: JSON.stringify({
           event_code: eventCode.trim(),
@@ -102,58 +75,44 @@ function Login() {
         })
       })
 
-      console.log('✅ Ticket created:', ticket)
+      console.log('Full response:', response)
 
-      // Сохраняем данные и переходим
-      localStorage.setItem('currentTicketId', ticket.id)
-      localStorage.setItem('currentEventId', ticket.event_id)
-      localStorage.setItem('currentQueueId', ticket.queue_id)
+      let ticketId;
+
+      // Если это новый талон
+      if (response && response.id) {
+        ticketId = response.id;
+      }
+      // Если талон уже существует
+      else if (response && response.ticket && response.ticket.id) {
+        ticketId = response.ticket.id;
+      }
+      // Если структура неожиданная
+      else {
+        console.error('Unexpected response structure:', response)
+        throw new Error('Неожиданный ответ от сервера')
+      }
+
+      localStorage.setItem('currentTicketId', ticketId.toString())
       localStorage.setItem('sessionId', deviceFingerprint)
+      localStorage.setItem('currentEventCode', eventCode.trim())
       
+      // Немедленно переходим на страницу пользователя в любом случае
       navigate('/user')
 
     } catch (err) {
-      console.error('❌ Ticket creation error:', err)
+      console.error('Ticket creation error:', err)
       
-      if (err.message.includes('400') && err.message.includes('У вас уже есть активный талон')) {
-        // Если талон уже существует, просто переходим на страницу пользователя
-        console.log('🎫 Ticket already exists, redirecting to user page...')
-        
-        // Пытаемся найти существующий талон
-        try {
-          const tickets = await apiCall(`/ticket/?session_id=${encodeURIComponent(deviceFingerprint)}&event_code=${encodeURIComponent(eventCode.trim())}`)
-          
-          if (tickets && tickets.length > 0) {
-            const activeTicket = tickets.find(t => t.status === 'active') || tickets[0]
-            
-            console.log('✅ Found existing ticket:', activeTicket)
-
-            // Сохраняем данные существующего талона
-            localStorage.setItem('currentTicketId', activeTicket.id)
-            localStorage.setItem('currentEventId', activeTicket.event_id)
-            localStorage.setItem('currentQueueId', activeTicket.queue_id)
-            localStorage.setItem('sessionId', deviceFingerprint)
-            
-            navigate('/user')
-            return
-          }
-        } catch (searchError) {
-          console.error('❌ Error searching for existing ticket:', searchError)
-          // Если не нашли, показываем обычную ошибку
-        }
-        
-        setError('У вас уже есть активный талон. Переход на страницу талона...')
-        // Даже если не нашли через поиск, все равно переходим - возможно данные уже в localStorage
-        setTimeout(() => navigate('/user'), 1000)
-        
-      } else if (err.message.includes('404') || err.message.includes('не найдено')) {
-        setError('Мероприятие с таким кодом не найдено')
+      if (err.message.includes('404')) {
+        setError(`Мероприятие с кодом "${eventCode}" не найдено`)
       } else if (err.message.includes('400')) {
         setError('Неверные данные для создания талона')
       } else if (err.message.includes('422')) {
         setError('Проверьте правильность введенных данных')
+      } else if (err.message.includes('Неожиданный ответ')) {
+        setError('Ошибка сервера. Попробуйте позже.')
       } else {
-        setError('Ошибка при создании талона: ' + err.message)
+        setError('Ошибка при создании талона')
       }
     } finally {
       setIsLoading(false)
@@ -168,25 +127,21 @@ function Login() {
     <div className={`login-page ${isDark ? 'dark' : 'light'}`}>
       <svg className="background-line1" width="100%" height="100%">
         <path
-          d={` M-100,250 
-               C150,50 280,450 450,250 
-               S600,50 1050,550 
-               S1010,450 1800,650 `}
+          d="M-100,250 C150,50 280,450 450,250 S600,50 1050,550 S1010,450 2400,650"
           fill="none" 
           strokeWidth="60" 
         />
       </svg>
       <svg className="background-line2" width="100%" height="100%">
         <path
-          d={` M-1800,650 
-               C1950,850 200,250 1950,150`}
+          d="M-1800,650 C1950,850 200,250 2350,150"
           fill="none" 
           strokeWidth="90" 
         />
       </svg>
       
       <button className="theme-toggle" onClick={toggleTheme}>
-        {isDark ? ' ☼ ' : ' ☾ '}
+        {isDark ? '☼' : '☾'}
       </button>
       
       <div className="login-container">
@@ -205,7 +160,6 @@ function Login() {
               placeholder="Введите код мероприятия"
               required
               disabled={isLoading || !deviceFingerprint}
-              pattern="[A-Z0-9]{1,20}"
               title="Только буквы и цифры"
             />
           </div>
@@ -220,12 +174,6 @@ function Login() {
               rows="3"
             />
           </div>
-
-          {error && (
-            <div className={`error-message ${error.includes('Переход') ? 'info-message' : ''}`}>
-              {error}
-            </div>
-          )}
           
           <button 
             type="submit" 
@@ -236,6 +184,15 @@ function Login() {
              isLoading ? 'Создание талона...' : 'Войти в очередь'}
           </button>
         </form>
+
+        {error && (
+          <div className="error-toast">
+            <div className="error-toast-content">
+              <span className="error-icon">⚠</span>
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

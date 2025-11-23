@@ -1,7 +1,6 @@
-/* User.css */
 .app {
-  width: 100vw;  
   min-height: 100vh;
+  width: 100vw; 
   position: relative;
   overflow: hidden;
   transition: background-color 0.3s ease;
@@ -96,10 +95,11 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
+/* ТЁМНЫЙ ФОН ДЛЯ ТИКЕТА В ЛЮБОЙ ТЕМЕ */
 .ticket-box {
   position: relative;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(26, 26, 26, 0.95);
   padding: 2rem;
   border-radius: 15px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.3);
@@ -111,27 +111,17 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 3px solid;
+  border: 3px solid #ffd700;
+  color: white;
   word-wrap: break-word;
   overflow-wrap: break-word;
-}
-
-.app.dark .ticket-box {
-  background: rgba(26, 26, 26, 1);
-  border-color: #ffd700;
-  color: white;
-}
-
-.app.light .ticket-box {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: #333;
-  color: black;
 }
 
 .ticket-label {
   font-size: clamp(1.2rem, 4vw, 1.5rem);
   margin-bottom: 1rem;
   opacity: 0.8;
+  color: white;
 }
 
 .ticket-number {
@@ -140,6 +130,7 @@
   font-family: monospace;
   margin: 1rem 0;
   letter-spacing: 2px;
+  color: #ffd700;
 }
 
 .ticket-type {
@@ -151,6 +142,7 @@
   word-wrap: break-word;
   text-align: center;
   padding: 0 10px;
+  color: white;
 }
 
 .ticket-info {
@@ -172,11 +164,19 @@
 .info-row span:first-child {
   opacity: 0.8;
   text-align: left;
+  color: white;
 }
 
 .info-row span:last-child {
   font-weight: bold;
   text-align: right;
+  color: white;
+}
+
+.position-number {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ffd700;
 }
 
 .status {
@@ -202,7 +202,21 @@
 }
 
 .status.inactive {
-  background: #333;
+  background: #f44336;
+  color: white;
+}
+
+.you-next {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.notes-text {
+  font-style: italic;
+  opacity: 0.8;
+  max-width: 200px;
+  word-wrap: break-word;
+  text-align: right;
   color: white;
 }
 
@@ -267,6 +281,16 @@
   transform: translateY(-2px);
 }
 
+.cancel-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+}
+
 /* Модальные окна */
 .modal-overlay {
   position: fixed;
@@ -283,20 +307,16 @@
 }
 
 .modal {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(26, 26, 26, 0.95);
   padding: 2rem;
   border-radius: 15px;
   max-width: 400px;
   width: 90%;
   box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  border: 2px solid #ffd700;
+  color: white;
   max-height: 90vh;
   overflow-y: auto;
-}
-
-.app.dark .modal {
-  background: rgba(26, 26, 26, 1);
-  color: white;
-  border: 2px solid #ffd700;
 }
 
 .modal h3 {
@@ -311,12 +331,13 @@
   margin-bottom: 1.5rem;
   opacity: 0.8;
   font-size: 0.9rem;
+  color: white;
 }
 
 .support-textarea {
   width: 100%;
   padding: 15px;
-  border: 2px solid #ddd;
+  border: 2px solid #555;
   border-radius: 8px;
   font-size: 1rem;
   resize: vertical;
@@ -324,21 +345,13 @@
   margin-bottom: 1.5rem;
   font-family: inherit;
   transition: border-color 0.3s;
+  background: #333;
+  color: white;
 }
 
 .support-textarea:focus {
   border-color: #ffd700;
   outline: none;
-}
-
-.app.dark .support-textarea {
-  background: #333;
-  color: white;
-  border-color: #555;
-}
-
-.app.dark .support-textarea:focus {
-  border-color: #ffd700;
 }
 
 .complaint-options {
@@ -357,24 +370,12 @@
   border-radius: 8px;
   transition: background 0.3s;
   border: 1px solid transparent;
-}
-
-.app.dark .complaint-option {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.app.light .complaint-option {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.app.dark .complaint-option:hover {
+.complaint-option:hover {
   background: rgba(255, 215, 0, 0.1);
   border-color: #ffd700;
-}
-
-.app.light .complaint-option:hover {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: #333;
 }
 
 .complaint-option input[type="radio"] {
@@ -448,6 +449,80 @@
   align-items: center;
 }
 
+.header-controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 100;
+}
+
+.logout-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.app.dark .logout-button {
+  background-color: #333;
+  color: white;
+  border: 1px solid #ffd700;
+}
+
+.app.light .logout-button {
+  background-color: #ddd;
+  color: black;
+  border: 1px solid #333;
+}
+
+.error-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.retry-btn {
+  margin-top: 1rem;
+  padding: 10px 20px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.retry-btn:hover {
+  background: #555;
+}
+
+.logout-btn {
+  background: #dc3545 !important;
+}
+
+.logout-btn:hover {
+  background: #c82333 !important;
+}
+
+.loading i {
+  margin-right: 10px;
+}
+
+.error-message i {
+  margin-right: 10px;
+  font-size: 1.5rem;
+}
+
 /* Адаптивность */
 @media (max-width: 480px) {
   .content {
@@ -478,27 +553,33 @@
   .main-display {
     font-size: 2rem;
   }
+  
+  .header-controls {
+    flex-direction: column;
+    top: 10px;
+    right: 10px;
+  }
 }
 
-.retry-btn {
-  margin-top: 1rem;
-  padding: 10px 20px;
-  background: #333;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s;
-}
-
-.retry-btn:hover {
-  background: #555;
-}
-
-.ticket-id {
-  font-family: monospace;
-  font-size: 0.8rem;
-  opacity: 0.7;
-  margin-top: 0.5rem;
+@media (max-width: 480px) {
+  .header-controls {
+    top: 10px;
+    right: 10px;
+    flex-direction: row; /* Оставляем в строку */
+    gap: 8px;
+  }
+  
+  .theme-toggle,
+  .logout-button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+  
+  .logout-button span {
+    display: none; /* Скрываем текст "Выйти", оставляем только иконку */
+  }
+  
+  .logout-button i {
+    margin-right: 0;
+  }
 }

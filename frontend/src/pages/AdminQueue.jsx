@@ -94,7 +94,7 @@ function AdminQueue() {
       setIsSubmittingQueue(true)
       setError('')
       
-      console.log('📤 Creating queue with data:', createQueueForm)
+      console.log(' Creating queue with data:', createQueueForm)
       
       // Создаем очередь согласно API документации
       const newQueue = await apiCall('/queue/', {
@@ -105,7 +105,7 @@ function AdminQueue() {
         })
       })
       
-      console.log('✅ Queue created successfully:', newQueue)
+      console.log(' Queue created successfully:', newQueue)
       
       // Обновляем список очередей
       await loadQueues()
@@ -114,7 +114,7 @@ function AdminQueue() {
       setError('')
       
     } catch (err) {
-      console.error('❌ Queue creation error:', err)
+      console.error(' Queue creation error:', err)
       const errorMessage = err.message.includes('422') ? 'Неверные данные для создания очереди' : 
                           err.message.includes('400') ? 'Ошибка в запросе' : 
                           err.message.includes('409') ? 'Очередь с таким именем уже существует' :
@@ -140,13 +140,13 @@ function AdminQueue() {
         })
       })
       
-      console.log('✅ Queue updated:', updatedQueue)
+      console.log(' Queue updated:', updatedQueue)
       
       await loadQueues()
       setShowEditQueueForm(null)
       
     } catch (err) {
-      console.error('❌ Queue update error:', err)
+      console.error(' Queue update error:', err)
       setError('Ошибка обновления очереди: ' + err.message)
     }
   }
@@ -167,12 +167,12 @@ function AdminQueue() {
         })
       })
       
-      console.log('✅ Queue deleted')
+      console.log(' Queue deleted')
       
       await loadQueues()
       
     } catch (err) {
-      console.error('❌ Queue deletion error:', err)
+      console.error(' Queue deletion error:', err)
       setError('Ошибка удаления очереди: ' + err.message)
     }
   }
@@ -213,7 +213,7 @@ function AdminQueue() {
           d={` M-100,250 
                C150,50 280,450 450,250 
                S600,50 1050,550 
-               S1010,450 1800,650 `}
+               S1010,450 2300,650 `}
           fill="none" 
           strokeWidth="60" 
         />
@@ -221,7 +221,7 @@ function AdminQueue() {
       <svg className="background-line2" width="100%" height="100%">
         <path
           d={` M-1800,650 
-               C1950,850 200,250 1950,150`}
+               C1950,850 200,250 2350,150`}
           fill="none" 
           strokeWidth="90" 
         />
