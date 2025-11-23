@@ -1,16 +1,10 @@
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* User.css */
 .app {
+  width: 100vw;  
   min-height: 100vh;
-  width: 100vw;
   position: relative;
-  transition: background-color 0.3s ease;
   overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 .app.dark {
@@ -23,6 +17,24 @@
   color: black;
 }
 
+.background-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 0.8;
+  width: 100%;
+  height: 100%;
+}
+
+.app.dark .background-line {
+  stroke: #ffd700;
+}
+
+.app.light .background-line {
+  stroke: #333;
+}
+
 .theme-toggle {
   position: fixed;
   top: 20px;
@@ -32,77 +44,56 @@
   border-radius: 5px;
   cursor: pointer;
   z-index: 100;
+  font-weight: bold;
 }
 
 .app.dark .theme-toggle {
   background-color: #333;
   color: white;
+  border: 1px solid #ffd700;
 }
 
 .app.light .theme-toggle {
   background-color: #ddd;
   color: black;
-}
-
-.background-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-.app.dark .background-line {
-  stroke: #ffd700;
-}
-
-.app.light .background-line {
-  stroke: #ffd700;
+  border: 1px solid #333;
 }
 
 .content {
   position: relative;
   z-index: 10;
-  padding: 20px; /* Уменьшил для мобильных */
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
   justify-content: center;
+  min-height: 100vh;
+  text-align: center;
 }
 
 .main-display-label {
-  font-size: clamp(1.5rem, 5vw, 3rem); /* Адаптивный шрифт */
-  font-weight: bold;
-  font-family: monospace;
-  text-align: center;
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
-  word-wrap: break-word;
-}
-
-.app.dark .main-display-label {
-  color: #ffd700; 
-}
-
-.app.light .main-display-label {
-  color: #000700; 
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
 }
 
 .main-display {
-  font-size: clamp(2rem, 8vw, 4rem); /* Адаптивный шрифт */
+  font-size: 3rem;
   font-weight: bold;
   font-family: monospace;
-  text-align: center;
   margin-bottom: 2rem;
+  padding: 1rem;
+  border-radius: 10px;
 }
 
 .app.dark .main-display {
   color: #ffd700;
+  background: rgba(255, 215, 0, 0.1);
 }
 
 .app.light .main-display {
-  color: #000700;
+  color: #333;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .ticket-box {
@@ -121,7 +112,7 @@
   justify-content: center;
   align-items: center;
   border: 3px solid;
-  word-wrap: break-word; /* Перенос длинных слов */
+  word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
@@ -148,6 +139,7 @@
   font-weight: bold;
   font-family: monospace;
   margin: 1rem 0;
+  letter-spacing: 2px;
 }
 
 .ticket-type {
@@ -159,4 +151,354 @@
   word-wrap: break-word;
   text-align: center;
   padding: 0 10px;
+}
+
+.ticket-info {
+  width: 100%;
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(255, 215, 0, 0.3);
+  padding-top: 1rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+  padding: 0.3rem 0;
+}
+
+.info-row span:first-child {
+  opacity: 0.8;
+  text-align: left;
+}
+
+.info-row span:last-child {
+  font-weight: bold;
+  text-align: right;
+}
+
+.status {
+  padding: 0.2rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.status.waiting {
+  background: #ffd700;
+  color: #000;
+}
+
+.status.active {
+  background: #333;
+  color: white;
+}
+
+.status.completed {
+  background: #2196F3;
+  color: white;
+}
+
+.status.inactive {
+  background: #333;
+  color: white;
+}
+
+/* Кнопки действий */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 400px;
+  width: 90%;
+  margin-top: 2rem;
+}
+
+.action-btn {
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex: 1;
+  min-width: 150px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.action-btn i {
+  font-size: 1.1rem;
+}
+
+.support-btn {
+  background: #333;
+  color: white;
+}
+
+.support-btn:hover {
+  background: #555;
+  transform: translateY(-2px);
+}
+
+.complaint-btn {
+  background: #333;
+  color: white;
+}
+
+.complaint-btn:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+}
+
+.refresh-btn {
+  background: #333;
+  color: white;
+}
+
+.refresh-btn:hover {
+  background: #555;
+  transform: translateY(-2px);
+}
+
+/* Модальные окна */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 15px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.app.dark .modal {
+  background: rgba(26, 26, 26, 1);
+  color: white;
+  border: 2px solid #ffd700;
+}
+
+.modal h3 {
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #ffd700;
+  font-size: 1.5rem;
+}
+
+.modal-description {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+.support-textarea {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 120px;
+  margin-bottom: 1.5rem;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.support-textarea:focus {
+  border-color: #ffd700;
+  outline: none;
+}
+
+.app.dark .support-textarea {
+  background: #333;
+  color: white;
+  border-color: #555;
+}
+
+.app.dark .support-textarea:focus {
+  border-color: #ffd700;
+}
+
+.complaint-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.complaint-option {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background 0.3s;
+  border: 1px solid transparent;
+}
+
+.app.dark .complaint-option {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.app.light .complaint-option {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.app.dark .complaint-option:hover {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: #ffd700;
+}
+
+.app.light .complaint-option:hover {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: #333;
+}
+
+.complaint-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ffd700;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.3s;
+  min-width: 100px;
+}
+
+.cancel-btn {
+  background: #666;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #888;
+  transform: translateY(-1px);
+}
+
+.submit-btn {
+  background: #333;
+  color: white;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #555;
+  transform: translateY(-1px);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading, .error-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.error-message {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid #ff4444;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .content {
+    padding: 1rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-btn {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-btn {
+    width: 100%;
+  }
+  
+  .ticket-box {
+    padding: 1.5rem;
+  }
+  
+  .main-display {
+    font-size: 2rem;
+  }
+}
+
+.retry-btn {
+  margin-top: 1rem;
+  padding: 10px 20px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.retry-btn:hover {
+  background: #555;
+}
+
+.ticket-id {
+  font-family: monospace;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.5rem;
 }

@@ -32,7 +32,7 @@ function AdmLogin() {
       localStorage.setItem('adminToken', response.access_token)
       localStorage.setItem('adminData', JSON.stringify(response.admin))
       
-      console.log('✅ Admin login successful:', response)
+      console.log(' Admin login successful:', response)
       // navigate('/user')
 
     } catch (err) {
@@ -61,11 +61,11 @@ function AdmLogin() {
         })
       }
     } catch (err) {
-      console.error('❌ Logout API call failed:', err)
+      console.error(' Logout API call failed:', err)
     } finally {
       localStorage.removeItem('adminToken')
       localStorage.removeItem('adminData')
-      console.log('✅ Logout successful')
+      console.log(' Logout successful')
       window.location.reload()
     }
   }
